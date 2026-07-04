@@ -1,0 +1,45 @@
+# --- General ---
+*.log
+*.pyc
+__pycache__/
+*.sqlite3
+
+# --- Entornos ---
+.env
+.env.local
+.env.*.local
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Python / FastAPI ---
+venv/
+.envrc
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Alembic ---
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+
+# --- Docker ---
+*.pid
+*.sock
+tmp/
+docker-compose.override.yml
+
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+
+# --- CSV uploads (Don't store raw data) ---
+uploads/
+*.csv
