@@ -19,14 +19,23 @@ multipart/form-data: file=<csv>
 
 ## Step 2: Migration
 
+Register the model in `app/core/models.py` first (Alembic autogenerate only sees imported models):
+
+```python
+# app/core/models.py
+from app.modules.auth.models import User  # example
+```
+
+Then create and review the migration:
+
 ```bash
-docker-compose exec backend alembic revision --autogenerate -m "Add statements table"
+docker compose exec backend alembic revision --autogenerate -m "Add users table"
 ```
 
 Review the generated file by hand — check `nullable`, defaults, and that `downgrade()` actually reverses `upgrade()` (`AI_RULES.md`, Yellow zone).
 
 ```bash
-docker-compose exec backend alembic upgrade head
+docker compose exec backend alembic upgrade head
 ```
 
 ## Step 3: Backend — everything inside the feature module

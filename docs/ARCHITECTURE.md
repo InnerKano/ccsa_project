@@ -130,6 +130,8 @@ Components reused by two or more modules: utilities, common exceptions, shared s
 
 PostgreSQL. Schema changes are always versioned with Alembic migrations. Never modify production schema by hand.
 
+Alembic lives in `backend/alembic/` and reads `DATABASE_URL` from `core/config.py`. All module models must be imported in `core/models.py` so autogenerate detects them. The first migration ships with the auth feature (`users`), not as an empty scaffold — see `workflows/start-project.md` Step 4.
+
 **High-level CCSA data model:**
 
 - `Statement` — a statement uploaded by a user (metadata: filename, upload date, currency). **The raw file is not stored**, only the derived transactions.

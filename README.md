@@ -22,7 +22,7 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 
 ## Project status
 
-> **Current phase: Step 3 — local stack via Docker Compose.** Backend, frontend, and Postgres start together. Backend verifies DB connectivity on startup; Alembic migrations and feature modules come in Steps 4+ per [`workflows/start-project.md`](./workflows/start-project.md).
+> **Current phase: Step 4 — Alembic wired, no feature tables yet.** Migration tooling is ready; the first revision (`users`) ships with the auth feature. See [`workflows/start-project.md`](./workflows/start-project.md) and [`workflows/implement-feature.md`](./workflows/implement-feature.md).
 
 ## Local development (recommended: Docker Compose)
 
@@ -51,7 +51,14 @@ Run tests inside Compose:
 docker compose exec backend pytest
 ```
 
-> Migrations (`alembic upgrade head`) are Step 4 — not required yet for `/health`.
+Database migrations (Alembic):
+
+```powershell
+docker compose exec backend alembic current        # no revision until auth feature
+docker compose exec backend alembic upgrade head   # apply pending migrations
+```
+
+> First migration = `users` table with the **auth feature** — not before. See `DATA_MODEL.md` and `implement-feature.md` Step 2.
 
 ## Backend — alternative runtimes
 

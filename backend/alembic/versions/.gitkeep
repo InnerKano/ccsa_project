@@ -1,0 +1,3 @@
+# Migration scripts live here.
+# First revision ships with the auth feature (`users` table) — see DATA_MODEL.md.
+# Do not commit empty or placeholder migrations.

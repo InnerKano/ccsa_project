@@ -36,9 +36,22 @@ Goal: one command brings up backend, frontend, and Postgres. Backend verifies DB
   docker compose exec db pg_isready -U postgres -d ccsa
   ```
 
-## Step 4: Database
+## Step 4: Database (Alembic wiring — no feature tables yet)
 
-Design the database and run the required migrations.
+Goal: migration tooling ready and documented. The **first revision ships with the auth feature** (`users` table per `DATA_MODEL.md`) — no empty migrations.
+
+- **`alembic init`** → `backend/alembic/` wired to `core/config` (`DATABASE_URL`) and `Base.metadata`
+- **`core/database.py`** → add `get_db()` FastAPI dependency (routes use `Depends(get_db)`)
+- **`core/models.py`** → central import registry; each new feature registers its models here for autogenerate
+- **No tables yet** — `alembic/versions/` stays empty until auth
+- **Verifiable:**
+  ```bash
+  docker compose exec backend alembic current    # no revision yet
+  docker compose exec backend alembic upgrade head   # succeeds (nothing to apply)
+  docker compose exec backend pytest
+  ```
+
+Next: **auth feature** via `implement-feature.md` (model → register in `core/models.py` → first migration → endpoints).
 
 ## Step 5: Validate the structure
 
