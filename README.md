@@ -22,9 +22,19 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 
 ## Project status
 
-> **Current phase: bootstrap complete (Steps 1–5).** Infra, Alembic, and modular layout validated. **Next:** `auth` feature via [`workflows/implement-feature.md`](./workflows/implement-feature.md).
+Bootstrap (Steps 1–5) and Phase A1 are complete. See [`workflows/middle-phases.md`](./workflows/middle-phases.md) for the full delivery plan and current phase boundaries.
 
-## Local development (recommended: Docker Compose)
+| # | Delivery | Status |
+|---|---|---|
+| A1 | Auth (register/login, JWT) | ✅ Done |
+| A2 | Statements (CSV upload) | ⬜ Next |
+| A3 | Analysis (Layer 1, rules) | ⬜ Pending |
+| A4 | Frontend vertical slice + CORS | ⬜ Pending |
+| A5 | Sample CSV fixture | ⬜ Pending |
+
+> CORS is intentionally not configured yet — it ships with A4. Until then, `localhost:3000` can render the auth screens but browser requests to the API will be blocked; use `curl` or Swagger to exercise endpoints manually (see "Trying it out manually" below).
+
+## Quickstart (Docker Compose)
 
 From the **repo root**:
 
@@ -45,24 +55,44 @@ Verify Postgres is up:
 docker compose exec db pg_isready -U postgres -d ccsa
 ```
 
-Run tests inside Compose:
+Apply migrations:
+
+```powershell
+docker compose exec backend alembic current        # a1_users_001 (users table) after A1
+docker compose exec backend alembic upgrade head   # apply any pending migrations
+```
+
+Run the full test suite:
 
 ```powershell
 docker compose exec backend pytest
 ```
 
-Database migrations (Alembic):
+This one command covers both API tests (in-process `TestClient`, no Postgres required — `SKIP_DB_CHECK` is set automatically in `tests/conftest.py`) and structure tests (`test_structure.py`, bootstrap layout). Feature-specific tests live under `app/modules/<feature>/tests/` (see [`workflows/implement-feature.md`](./workflows/implement-feature.md)).
+
+## Trying it out manually
+
+With Compose running, exercise the current API directly (works over `curl`/Swagger; browser flow arrives with CORS in A4):
 
 ```powershell
-docker compose exec backend alembic current        # no revision until auth feature
-docker compose exec backend alembic upgrade head   # apply pending migrations
+# Register
+curl -X POST http://localhost:8000/api/auth/register `
+  -H "Content-Type: application/json" `
+  -d '{"email":"test@example.com","password":"changeme123"}'
+
+# Login
+curl -X POST http://localhost:8000/api/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"test@example.com","password":"changeme123"}'
 ```
 
-> First migration = `users` table with the **auth feature** — not before. See `DATA_MODEL.md` and `implement-feature.md` Step 2.
+A successful login returns a JWT. Full endpoint list and request/response shapes: [`docs/API.md`](./docs/API.md).
 
-## Backend — alternative runtimes
+You can also drive the same requests interactively from Swagger at http://localhost:8000/docs.
 
-Use these when iterating on backend code outside Compose.
+## Appendix: alternative backend runtimes
+
+Use these only when iterating on backend code **outside** Compose. Compose remains the recommended and verified path above.
 
 ```powershell
 cd backend
@@ -86,26 +116,14 @@ docker build -t ccsa-backend .
 docker run --rm -p 8000:8000 -e SKIP_DB_CHECK=true ccsa-backend
 ```
 
-## Backend — tests
+### Running tests outside Compose
 
-**One test suite, any runtime.** Tests use FastAPI's `TestClient` (in-process — no running server required). `SKIP_DB_CHECK` is set automatically in `tests/conftest.py` so pytest does not need Postgres.
-
-| Type | What it covers | When |
-|---|---|---|
-| **API test** (`pytest`) | HTTP contract in-process (`/health`, later auth/statements) | Every feature commit |
-| **Structure test** (`pytest`) | Bootstrap layout (`test_structure.py`) | After Step 5 / infra changes |
-| **Manual smoke** (`curl`) | Server listening + DB reachable (Compose) | After infra changes |
-| **End-to-end** | Full flow in browser or deployed URL | Before submission (`finish-project.md`) |
+Same suite, same result, no running server required:
 
 ```powershell
-# inside Compose or from host (cd backend) — same 7 tests
-docker compose exec backend pytest
-
 cd backend
 pytest
 ```
-
-Feature-specific tests live under `app/modules/<feature>/tests/` (see `workflows/implement-feature.md`).
 
 ## Deployment
 
@@ -124,5 +142,6 @@ See [Deployment Guide](./docs/DEPLOYMENT.md) — Vercel (frontend) + Railway/Ren
 ## Workflows
 
 - [Start a Project](./workflows/start-project.md)
+- [Middle Phases](./workflows/middle-phases.md) — post-bootstrap delivery plan and phase status
 - [Implement a Feature](./workflows/implement-feature.md)
 - [Finish the Project](./workflows/finish-project.md)
