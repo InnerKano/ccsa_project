@@ -47,6 +47,7 @@ See [Deployment Guide](./docs/DEPLOYMENT.md) — Vercel (frontend) + Railway/Ren
 - [Requirements](./docs/REQUIREMENTS.md) — problem interpretation, constraints, risks
 - [Project Scope](./docs/PROJECT_SCOPE.md) — Must/Should/Could/Won't Have
 - [Architecture](./docs/ARCHITECTURE.md) — structure, modules, and analysis pipeline
+- [Data Model](./docs/DATA_MODEL.md) — schema, PII classification, retention, and responsible data handling
 - [Decisions](./docs/DECISIONS.md) — technical decisions and trade-offs
 - [API Reference](./docs/API.md) — endpoints
 - [AI Rules](./docs/AI_RULES.md) · [AI Log](./docs/AI_LOG.md) — responsible AI usage and logging

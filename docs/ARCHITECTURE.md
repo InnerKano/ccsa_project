@@ -139,6 +139,8 @@ PostgreSQL. Schema changes are always versioned with Alembic migrations. Never m
 
 All resources are scoped to `user_id`: a user must never access another user's data (enforced in each query).
 
+> The **field-by-field schema, PII classification, cascade/deletion rules, encryption, retention, and scaling** live in [`DATA_MODEL.md`](./DATA_MODEL.md). That document is the source of truth for what is stored and under which responsible-data rules.
+
 ---
 
 ## Authentication

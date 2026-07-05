@@ -122,3 +122,43 @@ These decisions extend or deviate from the defaults and directly answer question
 **Decision**: Each analysis is saved and associated with the user's account and can be retrieved later.
 
 **Rationale**: The brief asks for "results saved" and enabling month-to-month tracking adds value (foundation for the "Could Have" of temporal comparisons).
+
+### D7 — Merchant normalization lives in the analysis layer
+**Decision**: `transactions` stores the bank's raw `description` only. There is no `merchant` column on `transactions`. Canonical merchant names (e.g. `"NETFLIX.COM *SF"` → `"NETFLIX"`) are derived during analysis and stored on `detected_subscriptions.merchant`.
+
+**Alternatives considered**: Persisting a normalized `merchant` on each transaction at ingest time.
+
+**Rationale**:
+- Ingest should stay faithful to the source CSV; canonicalization is an interpretation, not raw data.
+- Merchant grouping logic belongs in the analysis pipeline (Layer 1 rules / Layer 2 LLM), not in the upload path.
+- Avoids duplicating the same merchant string on every recurring row before analysis runs.
+
+**Consequence**: Joining a recommendation back to its source transaction(s) goes through `detected_subscriptions`, not a direct field on `transactions`. See open item in `DATA_MODEL.md` §7 for structured recommendation → subscription links.
+
+### D8 — Email stored lowercase (case-insensitive uniqueness)
+**Decision**: Normalize `email` to lowercase on register and login before lookup/persist. Uniqueness is enforced on the stored lowercase value.
+
+**Alternatives considered**: PostgreSQL `citext` type; case-sensitive unique constraint.
+
+**Rationale**: Prevents duplicate accounts for `User@x.com` vs `user@x.com` — a common auth bug with minimal implementation cost (one `.lower()` in the auth service).
+
+### D9 — Controlled vocabulary validated in application code, not DB enums
+**Decision**: Fields such as `layer_used`, `cadence`, and `category` are `VARCHAR` columns without PostgreSQL `CHECK` constraints or native enums in the MVP. Allowed values are enforced in Pydantic schemas and service logic.
+
+**Alternatives considered**: DB-level `CHECK` or `ENUM` types.
+
+**Rationale**:
+- Faster schema iteration under a 72-hour deadline (no migration per new category).
+- Pydantic already validates at the API boundary; invalid values cannot enter through normal endpoints.
+- Trade-off accepted: direct DB writes could bypass validation — acceptable in MVP with a single application writer.
+
+### D10 — Re-analysis appends a new row (does not replace)
+**Decision**: Calling `POST /api/analysis/{statement_id}` again on the same statement **creates a new `Analysis` row** with its own children. Previous analyses are retained.
+
+**Alternatives considered**: Upsert / replace the latest analysis in place.
+
+**Rationale**:
+- Consistent with D6 (persisted history) and enables comparing rule-only vs LLM-enriched runs over time.
+- The UI treats the **latest analysis by `created_at`** as the current result unless the user explicitly picks an older one from history (Could Have).
+
+**Consequence**: Multiple analyses per statement are expected; list/detail endpoints should order by `created_at DESC` when showing "current" results.
