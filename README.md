@@ -22,71 +22,79 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 
 ## Project status
 
-> **Current phase: Step 2.1 — backend walking skeleton.** FastAPI app with `GET /health`, modular folder layout, Dockerfile, and pytest. Full stack (Compose, DB, auth, features) comes in Steps 3+ per [`workflows/start-project.md`](./workflows/start-project.md).
+> **Current phase: Step 3 — local stack via Docker Compose.** Backend, frontend, and Postgres start together. Backend verifies DB connectivity on startup; Alembic migrations and feature modules come in Steps 4+ per [`workflows/start-project.md`](./workflows/start-project.md).
 
-## Backend — run locally
+## Local development (recommended: Docker Compose)
+
+From the **repo root**:
+
 ```powershell
-cd backend/
+cp .env.example .env
+docker compose up --build
 ```
 
-All commands assume you are in `backend/`.
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| API + Swagger | http://localhost:8000/docs |
+| Health | http://localhost:8000/health → `{"status":"healthy"}` |
+
+Verify Postgres is up:
+
+```powershell
+docker compose exec db pg_isready -U postgres -d ccsa
+```
+
+Run tests inside Compose:
+
+```powershell
+docker compose exec backend pytest
+```
+
+> Migrations (`alembic upgrade head`) are Step 4 — not required yet for `/health`.
+
+## Backend — alternative runtimes
+
+Use these when iterating on backend code outside Compose.
+
+```powershell
+cd backend
+```
 
 ### Option A: venv (IDE + fast iteration)
 
-Use this for editor autocomplete and quick runs. The venv is local-only (`backend/venv/`, gitignored).
+The venv is local-only (`backend/venv/`, gitignored). For `/health` without Postgres, set `SKIP_DB_CHECK=true` in `.env` or export it for the session.
 
 ```powershell
 python -m venv venv
-# activate venv
 .\venv\Scripts\activate
-
-.\venv\Scripts\pip install -r requirements.txt
-.\venv\Scripts\uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-### Option B: Docker (matches production-like runtime)
+### Option B: standalone Docker image
 
 ```powershell
 docker build -t ccsa-backend .
-docker run --rm -p 8000:8000 ccsa-backend
+docker run --rm -p 8000:8000 -e SKIP_DB_CHECK=true ccsa-backend
 ```
-
-### Option C: Docker Compose (Step 3 — not yet)
-
-Once `docker-compose.yml` exists at repo root:
-
-```bash
-cp .env.example .env   # edit values
-docker-compose up
-docker-compose exec backend alembic upgrade head
-```
-
-### Verify the server is up
-
-```powershell
-curl http://localhost:8000/health
-# → {"status":"healthy"}
-```
-
-- API docs → http://localhost:8000/docs
-- Frontend → http://localhost:3000 (once Step 3 scaffold is complete)
 
 ## Backend — tests
 
-**One test suite, any runtime.** Tests use FastAPI's `TestClient` (in-process — no running server required). You do not need separate tests for venv vs Docker; the same `pytest` runs in whichever environment has the dependencies installed.
+**One test suite, any runtime.** Tests use FastAPI's `TestClient` (in-process — no running server required). `SKIP_DB_CHECK` is set automatically in `tests/conftest.py` so pytest does not need Postgres.
 
 | Type | What it covers | When |
 |---|---|---|
 | **API test** (`pytest`) | HTTP contract in-process (`/health`, later auth/statements) | Every feature commit |
-| **Manual smoke** (`curl`) | Server actually listening (venv or Docker) | After infra changes |
+| **Manual smoke** (`curl`) | Server listening + DB reachable (Compose) | After infra changes |
 | **End-to-end** | Full flow in browser or deployed URL | Before submission (`finish-project.md`) |
 
 ```powershell
-# from backend/ with venv active or venv\Scripts\ prefix
+# from backend/ (venv)
 pytest
 
-# later, inside Compose (Step 3+)
-docker-compose exec backend pytest
+# inside Compose
+docker compose exec backend pytest
 ```
 
 Feature-specific tests live under `app/modules/<feature>/tests/` (see `workflows/implement-feature.md`).

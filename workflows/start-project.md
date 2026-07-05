@@ -20,9 +20,21 @@ Complete the architectural analysis for backend and frontend before creating the
 - (venv desde requirements.txt)
 - **Verificable**: uvicorn app.main:app local → curl localhost:8000/health
 
-## Step 3: Start services
+## Step 3: Start services (Compose + Postgres reachable)
 
-Bring up the Docker services for local development.
+Goal: one command brings up backend, frontend, and Postgres. Backend verifies DB on startup; `/health` stays the public contract.
+
+- **`docker-compose.yml`** at repo root (`backend`, `frontend`, `db`)
+- **`.env.example`** — copy to `.env` before first run
+- **`core/config.py` + `core/database.py`** — `DATABASE_URL` wiring; startup `SELECT 1` (skipped in pytest via `SKIP_DB_CHECK`)
+- **Frontend scaffold** — minimal Next.js so the `frontend` service can start
+- **Verifiable:**
+  ```bash
+  cp .env.example .env
+  docker compose up --build
+  curl http://localhost:8000/health          # → {"status":"healthy"}
+  docker compose exec db pg_isready -U postgres -d ccsa
+  ```
 
 ## Step 4: Database
 
