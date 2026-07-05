@@ -12,6 +12,14 @@
 
 Complete the architectural analysis for backend and frontend before creating the project structure.
 
+## Step 2.1: Infra backend + /health real (walking skeleton, lado backend)
+
+- **requirements.txt** (fastapi, uvicorn, sqlalchemy, alembic, psycopg2-binary, pydantic-settings)
+- **main.py** → app FastAPI real con GET /health
+- **backend/Dockerfile**
+- (venv desde requirements.txt)
+- **Verificable**: uvicorn app.main:app local → curl localhost:8000/health
+
 ## Step 3: Start services
 
 Bring up the Docker services for local development.
