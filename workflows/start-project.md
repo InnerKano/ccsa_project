@@ -53,11 +53,61 @@ Goal: migration tooling ready and documented. The **first revision ships with th
 
 Next: **auth feature** via `implement-feature.md` (model → register in `core/models.py` → first migration → endpoints).
 
-## Step 5: Validate the structure
+## Step 5: Validate structure (bootstrap complete)
 
-Verify that this initial layout matches the monolithic-modular vision of the project; if not, make necessary adjustments.
+Goal: confirm code, infra, and docs describe the **same** modular monolith before building features.
 
-Initial recommended structure:
+### Checklist — backend
+
+- [x] `app/core/` — `config.py`, `database.py` (+ `get_db`), `models.py` (Alembic registry)
+- [x] `app/modules/` — README + planned stubs (`auth`, `statements`, `analysis`)
+- [x] `app/shared/` — README (LLM layer documented, not implemented yet)
+- [x] `app/main.py` — lifespan DB check + router registration pattern commented
+- [x] `backend/alembic/` — wired; `versions/` empty until auth
+- [x] `backend/tests/test_structure.py` — layout assertions (no Postgres)
+
+### Checklist — repo / infra
+
+- [x] `docker-compose.yml` + `.env.example` at repo root
+- [x] Dockerfiles in `backend/` and `frontend/` (D11 — no orphan `docker/` folder)
+- [x] `docs/ARCHITECTURE.md` tree matches disk
+- [x] `frontend/app/`, `frontend/lib/`, `frontend/components/` present
+
+### Verifiable
+
+```bash
+docker compose exec backend pytest          # 7 passed (monorepo mounted at /workspace)
+docker compose exec backend alembic current # no revision until auth
+```
+
+Compose mounts the repo root at `/workspace` (D12) — not `./backend:/app` alone — so structure tests see `docker-compose.yml` and `frontend/` inside the container.
+
+### Testing policy (bootstrap steps)
+
+| Step | Automated (`pytest`) | Manual smoke |
+|---|---|---|
+| 2.1 | `test_health` — API contract | `curl /health` |
+| 3 | — | `compose up`, `pg_isready` |
+| 4 | `test_health` (DB skipped in tests) | `alembic current`, `upgrade head` |
+| 5 | `test_structure` — backend + monorepo layout (7 in Docker and host) | Review checklist above |
+
+Feature modules add API tests under `modules/<feature>/tests/` (`implement-feature.md`).
+
+---
+
+## Normal flow after bootstrap
+
+Bootstrap (Steps 1–5) is **one-time per project**. Ongoing work follows this loop:
+
+1. Pick the next **Must Have** from `docs/PROJECT_SCOPE.md`.
+2. Execute `workflows/implement-feature.md` end-to-end (plan → migration → backend → tests → frontend → docs → commit).
+3. Record non-trivial AI usage in `docs/AI_LOG.md`.
+
+**First feature:** `auth` (`app/modules/auth/`) — first real migration (`users`), Red zone security review.
+
+---
+
+## Reference layout
 ```
 backend/app/
 ├── main.py

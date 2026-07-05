@@ -162,3 +162,23 @@ These decisions extend or deviate from the defaults and directly answer question
 - The UI treats the **latest analysis by `created_at`** as the current result unless the user explicitly picks an older one from history (Could Have).
 
 **Consequence**: Multiple analyses per statement are expected; list/detail endpoints should order by `created_at DESC` when showing "current" results.
+
+### D11 — Dockerfiles colocated with services (no top-level `docker/` folder)
+**Decision**: `docker-compose.yml` lives at the repo root; each service keeps its own `Dockerfile` in `backend/` and `frontend/`.
+
+**Alternatives considered**: Central `docker/Dockerfile.backend` pattern from generic starter kits.
+
+**Rationale**:
+- Smaller context paths (`build: ./backend`) and less indirection under a 72-hour deadline.
+- Volume mounts in Compose map cleanly to service directories.
+- `ARCHITECTURE.md` project tree reflects what is actually on disk after Step 5 validation.
+
+### D12 — Compose mounts the full monorepo in development
+**Decision**: Local Compose mounts the repository root at `/workspace` with `working_dir` set to `/workspace/backend` (and `/workspace/frontend`). Not `./backend:/app` alone.
+
+**Alternatives considered**: Backend-only mount with `pytest.skip` for monorepo structure tests; separate `tests/repository/` suite.
+
+**Rationale**:
+- CCSA is a monorepo; Docker is the official local runtime — it should see the same tree as the host.
+- Avoids skipped tests and `REPO_ROOT = /` bugs inside containers.
+- Alembic, pytest, and docs remain addressable consistently from `docker compose exec backend`.

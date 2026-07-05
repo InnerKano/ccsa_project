@@ -27,13 +27,17 @@ The approach is a full-stack monorepo with a modular backend and a modern fronte
 
 ```text
 ccsa_project/
-├── backend/                 # FastAPI application
-├── frontend/                # Next.js application
-├── docker/                  # Docker configuration
+├── backend/                 # FastAPI app, Dockerfile, Alembic, requirements.txt
+├── frontend/                # Next.js app, Dockerfile, package.json
+├── docker-compose.yml       # Local stack: backend + frontend + Postgres
+├── .env.example             # Copy to .env before first run
 ├── workflows/               # Engineering processes
-├── docs/                    # Project documentation
-└── scripts/                 # Development utilities
+└── docs/                    # Project documentation
 ```
+
+Dockerfiles live **next to each service** (`backend/Dockerfile`, `frontend/Dockerfile`), not in a separate `docker/` folder — see `DECISIONS.md` D11.
+
+**Local development:** Compose mounts the **full monorepo** at `/workspace` (D12) so backend and frontend run from `/workspace/backend` and `/workspace/frontend` with the same tree pytest and docs expect.
 
 Each application owns its implementation, configuration, and documentation within the same repository.
 

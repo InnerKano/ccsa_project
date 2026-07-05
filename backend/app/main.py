@@ -22,6 +22,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Feature routers register here as modules are implemented (see app/modules/README.md):
+# from app.modules.auth.api import router as auth_router
+# app.include_router(auth_router)
+
 
 @app.get("/health")
 def health_check() -> dict[str, str]:

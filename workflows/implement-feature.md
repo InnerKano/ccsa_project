@@ -1,6 +1,8 @@
 # Workflow: Implement a Feature
 
-Use each time you build a feature end-to-end. Follow the UI → API → DB flow defined in `workflows/start-project.md`.
+Use each time you build a feature end-to-end. **Prerequisite:** bootstrap complete (Steps 1–5 in `start-project.md`) — Compose running, Alembic wired, structure validated.
+
+Follow the UI → API → DB flow defined in `workflows/start-project.md`.
 
 ## Step 1: Plan (no code yet)
 

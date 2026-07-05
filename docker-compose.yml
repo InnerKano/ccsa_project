@@ -18,6 +18,7 @@ services:
   backend:
     build:
       context: ./backend
+    working_dir: /workspace/backend
     ports:
       - "8000:8000"
     env_file:
@@ -28,12 +29,13 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./backend:/app
+      - .:/workspace
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:
       context: ./frontend
+    working_dir: /workspace/frontend
     ports:
       - "3000:3000"
     env_file:
@@ -43,8 +45,8 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
+      - .:/workspace
+      - frontend_node_modules:/workspace/frontend/node_modules
 
 volumes:
   postgres_data:

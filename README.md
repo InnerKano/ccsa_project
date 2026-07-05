@@ -22,7 +22,7 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 
 ## Project status
 
-> **Current phase: Step 4 — Alembic wired, no feature tables yet.** Migration tooling is ready; the first revision (`users`) ships with the auth feature. See [`workflows/start-project.md`](./workflows/start-project.md) and [`workflows/implement-feature.md`](./workflows/implement-feature.md).
+> **Current phase: bootstrap complete (Steps 1–5).** Infra, Alembic, and modular layout validated. **Next:** `auth` feature via [`workflows/implement-feature.md`](./workflows/implement-feature.md).
 
 ## Local development (recommended: Docker Compose)
 
@@ -93,15 +93,16 @@ docker run --rm -p 8000:8000 -e SKIP_DB_CHECK=true ccsa-backend
 | Type | What it covers | When |
 |---|---|---|
 | **API test** (`pytest`) | HTTP contract in-process (`/health`, later auth/statements) | Every feature commit |
+| **Structure test** (`pytest`) | Bootstrap layout (`test_structure.py`) | After Step 5 / infra changes |
 | **Manual smoke** (`curl`) | Server listening + DB reachable (Compose) | After infra changes |
 | **End-to-end** | Full flow in browser or deployed URL | Before submission (`finish-project.md`) |
 
 ```powershell
-# from backend/ (venv)
-pytest
-
-# inside Compose
+# inside Compose or from host (cd backend) — same 7 tests
 docker compose exec backend pytest
+
+cd backend
+pytest
 ```
 
 Feature-specific tests live under `app/modules/<feature>/tests/` (see `workflows/implement-feature.md`).
