@@ -27,10 +27,10 @@ Bootstrap (Steps 1–5) and Phase A1 are complete. See [`workflows/middle-phases
 | # | Delivery | Status |
 |---|---|---|
 | A1 | Auth (register/login, JWT) | ✅ Done |
-| A2 | Statements (CSV upload) | ⬜ Next |
-| A3 | Analysis (Layer 1, rules) | ⬜ Pending |
+| A2 | Statements (CSV upload) | ✅ Done — pending audit |
+| A3 | Analysis (Layer 1, rules) | ⬜ Next |
 | A4 | Frontend vertical slice + CORS | ⬜ Pending |
-| A5 | Sample CSV fixture | ⬜ Pending |
+| A5 | Sample CSV fixture | ✅ Done (with A2) |
 
 > CORS is intentionally not configured yet — it ships with A4. Until then, `localhost:3000` can render the auth screens but browser requests to the API will be blocked; use `curl` or Swagger to exercise endpoints manually (see "Trying it out manually" below).
 
@@ -58,7 +58,7 @@ docker compose exec db pg_isready -U postgres -d ccsa
 Apply migrations:
 
 ```powershell
-docker compose exec backend alembic current        # a1_users_001 (users table) after A1
+docker compose exec backend alembic current        # a2_statements_001 after A2
 docker compose exec backend alembic upgrade head   # apply any pending migrations
 ```
 
@@ -87,6 +87,18 @@ curl -X POST http://localhost:8000/api/auth/login `
 ```
 
 A successful login returns a JWT. Full endpoint list and request/response shapes: [`docs/API.md`](./docs/API.md).
+
+**Statements (A2)** — requires a JWT from login:
+
+```powershell
+# Upload sample CSV (replace TOKEN)
+curl -X POST http://localhost:8000/api/statements `
+  -H "Authorization: Bearer TOKEN" `
+  -F "file=@backend/fixtures/sample.csv"
+
+# List statements
+curl http://localhost:8000/api/statements -H "Authorization: Bearer TOKEN"
+```
 
 You can also drive the same requests interactively from Swagger at http://localhost:8000/docs.
 

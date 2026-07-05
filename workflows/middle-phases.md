@@ -22,7 +22,7 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] Alembic + `get_db`
 - [x] Structure validated (bootstrap complete)
 - [x] A1 — Auth (register/login, JWT, `users` migration, `get_current_user`) — **pending your audit/commit**
-- [ ] A2 — Statements
+- [ ] A2 — Statements — **implemented, pending audit/commit**
 - [ ] Should Have (LLM, sample CSV, category summaries)
 - [ ] Deploy + video
 

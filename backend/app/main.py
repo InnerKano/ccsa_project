@@ -23,8 +23,10 @@ app = FastAPI(
 )
 
 from app.modules.auth.api import router as auth_router
+from app.modules.statements.api import router as statements_router
 
 app.include_router(auth_router)
+app.include_router(statements_router)
 
 
 @app.get("/health")

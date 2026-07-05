@@ -11,3 +11,5 @@ This is a temporary file to store ideas and thoughts about the project. [ In oth
 - The workflow should contain reusable implementation patterns, not business-specific examples.
 
 - Consider a data collection layer for analytics or historical records for the company. The business may need to keep anonymized or aggregated history to analyze trends while protecting customer privacy.
+
+- fix the test about register already existing user. Skip it if the user already exists o do something else.

@@ -21,4 +21,5 @@ YYYY-MM-DD | [module] | What was asked | Usefulness (1-5) | What was fixed manua
 | 2026-07-05 | database | Step 4 Alembic wiring: env.py, get_db(), core/models registry; no feature tables | 5 | First migration deferred to auth feature per DATA_MODEL.md; no empty revisions. |
 | 2026-07-05 | architecture | Step 5 validate structure: module stubs, test_structure, docs alignment, D11 | 5 | ARCHITECTURE tree updated to match disk; bootstrap complete, next = auth. |
 | 2026-07-05 | auth | A1 auth module: User model, bcrypt/JWT, register/login, first migration, integration tests, minimal login/register UI | 4 | Switched from passlib to direct bcrypt (bcrypt 5.x incompatibility); pending Red-zone review before commit. |
+| 2026-07-05 | statements | A2 statements module: CSV parse in memory, Statement/Transaction models, migration, per-user CRUD, sample.csv fixture, integration + unit tests | 4 | Pending Red-zone review (per-user isolation, no sensitive data in errors); no frontend upload UI yet (A4). |
 

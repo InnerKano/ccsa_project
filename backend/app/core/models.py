@@ -5,5 +5,6 @@ side effects from other modules.
 """
 
 from app.modules.auth.models import User
+from app.modules.statements.models import Statement, Transaction
 
-__all__ = ["User"]
+__all__ = ["User", "Statement", "Transaction"]

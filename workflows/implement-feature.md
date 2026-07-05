@@ -31,8 +31,10 @@ from app.modules.auth.models import User  # example
 Then create and review the migration:
 
 ```bash
-docker compose exec backend alembic revision --autogenerate -m "Add users table"
+docker compose exec backend alembic revision --autogenerate -m "Add statements tables"
 ```
+
+If the endpoint accepts `UploadFile` / `Form(...)`, add `python-multipart` to `backend/requirements.txt` (required by FastAPI for multipart uploads).
 
 Review the generated file by hand — check `nullable`, defaults, and that `downgrade()` actually reverses `upgrade()` (`AI_RULES.md`, Yellow zone).
 
@@ -102,7 +104,9 @@ Register the new router in `main.py`.
 ## Step 4: Backend tests
 
 ```python
-# backend/app/modules/statements/tests/test_api.py
+# backend/app/modules/statements/tests/test_statements_api.py
+# Use a unique basename per module (e.g. test_statements_api.py) — not test_api.py in every module,
+# or pytest raises "import file mismatch" when collecting app/modules/*/tests/.
 def test_upload_statement(client, auth_headers):
     with open("fixtures/sample.csv", "rb") as f:
         response = client.post("/api/statements", files={"file": f}, headers=auth_headers)
