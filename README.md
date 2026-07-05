@@ -40,7 +40,7 @@ docker-compose exec backend alembic upgrade head
 
 ## Deployment
 
-Add a deployment guide describing how to deploy the project to your chosen hosting platform.
+See [Deployment Guide](./docs/DEPLOYMENT.md) — Vercel (frontend) + Railway/Render (backend + PostgreSQL).
 
 ## Documentation
 
@@ -54,5 +54,6 @@ Add a deployment guide describing how to deploy the project to your chosen hosti
 ## Workflows
 
 - [Start a Project](./workflows/start-project.md)
-- Create a workflow document for feature implementation so features can be developed in an orderly and efficient way.
+- [Implement a Feature](./workflows/implement-feature.md)
+- [Finish the Project](./workflows/finish-project.md)
 
