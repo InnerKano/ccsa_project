@@ -21,7 +21,8 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] Compose + Postgres
 - [x] Alembic + `get_db`
 - [x] Structure validated (bootstrap complete)
-- [ ] Must Have features
+- [x] A1 — Auth (register/login, JWT, `users` migration, `get_current_user`) — **pending your audit/commit**
+- [ ] A2 — Statements
 - [ ] Should Have (LLM, sample CSV, category summaries)
 - [ ] Deploy + video
 
@@ -127,4 +128,4 @@ Notes specific to this stretch:
 
 ## Next step
 
-A1 — auth, via `implement-feature.md`, Red zone review per `AI_RULES.md`. Then A2 → A3 → A4 in order, each with a verifiable demo. LLM work starts only once Phase A meets the success criterion. Documentation updates during this stretch are limited to `API.md`, `AI_LOG.md`, and `DECISIONS.md` (only for non-obvious changes) — no new docs beyond this one.
+**A2 — statements** (CSV upload), via `implement-feature.md`, after A1 is audited and committed. Then A3 → A4 in order, each with a verifiable demo. LLM work starts only once Phase A meets the success criterion. Documentation updates during this stretch are limited to `API.md`, `AI_LOG.md`, and `DECISIONS.md` (only for non-obvious changes) — no new docs beyond this one.

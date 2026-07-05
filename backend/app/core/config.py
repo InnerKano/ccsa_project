@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = True
     secret_key: str = "change-me-in-production"
+    jwt_expire_minutes: int = 60 * 24 * 7  # 7 days
     skip_db_check: bool = False
 
 

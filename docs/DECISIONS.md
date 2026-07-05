@@ -182,3 +182,18 @@ These decisions extend or deviate from the defaults and directly answer question
 - CCSA is a monorepo; Docker is the official local runtime — it should see the same tree as the host.
 - Avoids skipped tests and `REPO_ROOT = /` bugs inside containers.
 - Alembic, pytest, and docs remain addressable consistently from `docker compose exec backend`.
+
+### D13 — bcrypt for password hashing
+**Decision**: Hash passwords with **bcrypt** (`bcrypt.hashpw` / `checkpw`). Plaintext passwords are never stored or logged.
+
+**Alternatives considered**: argon2 (stronger, extra dependency/setup); passlib wrapper (unmaintained; incompatible with bcrypt 5.x).
+
+**Rationale**:
+- Closes `DATA_MODEL.md` open item; bcrypt is widely understood and sufficient for MVP.
+- Direct `bcrypt` usage avoids passlib maintenance issues while keeping the API surface minimal in `core/security.py`.
+- argon2 can replace bcrypt later with a migration + re-hash strategy if requirements change.
+
+### D14 — Single-role model 
+**Decision**: No admin/supervisor roles.
+
+**Rationale**: single-consumer product per REQUIREMENTS §1, no organizational use case; user isolation via user_id scoping is sufficient. RBAC listed as secondary/optional in PROJECT_SCOPE, not required for this MVP.

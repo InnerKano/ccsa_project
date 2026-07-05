@@ -18,7 +18,7 @@ def test_modular_monolith_directories_exist() -> None:
 
 def test_core_wiring_files_exist() -> None:
     core = APP_ROOT / "core"
-    for name in ("config.py", "database.py", "models.py"):
+    for name in ("config.py", "database.py", "models.py", "security.py"):
         assert (core / name).is_file(), f"missing core/{name}"
 
 

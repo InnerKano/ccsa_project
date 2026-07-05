@@ -171,8 +171,8 @@ The schema is created exclusively through **Alembic migrations** — never by ha
 
 ## 7. Open items to confirm before scaffolding
 
-- [ ] Confirm password hashing library (bcrypt vs argon2) → record in `DECISIONS.md`.
-- [ ] Confirm whether `analyses.user_id` denormalization stays or scoping goes through `statement.user_id` (trade-off: query speed vs. normalization).
+- [x] Confirm password hashing library (bcrypt vs argon2) → **bcrypt** (D13)
+- [x] Confirm whether `analyses.user_id` denormalization stays or scoping goes through `statement.user_id` → **keep denormalized `user_id` on `analyses`** for fast per-user queries (see §2)
 - [ ] Confirm account-deletion endpoint is in scope for the MVP or deferred (Could Have).
 - [ ] **`recommendations` → `detected_subscriptions` link:** no FK today; the relationship lives in free text (`title`/`detail`). Sufficient for MVP (show + explain). Add optional `detected_subscription_id` if "mark as applied" or structured savings tracking is needed (Could Have).
 - [ ] **Analysis history UI:** D10 keeps all runs; confirm whether the MVP shows only the latest analysis or a simple history picker (Could Have).

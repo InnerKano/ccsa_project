@@ -54,7 +54,7 @@ backend/app/modules/statements/
 ```python
 from sqlalchemy import Column, String, UUID, DateTime, Numeric
 from datetime import datetime
-from app.database import Base
+from app.core.database import Base
 
 class Statement(Base):
     __tablename__ = "statements"
@@ -82,6 +82,8 @@ class StatementResponse(BaseModel):
 **api.py**
 ```python
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from app.core.database import get_db
+from app.core.security import get_current_user
 from app.modules.statements.schemas import StatementResponse
 
 router = APIRouter(prefix="/api/statements", tags=["statements"])
@@ -109,8 +111,10 @@ def test_upload_statement(client, auth_headers):
 ```
 
 ```bash
-docker-compose exec backend pytest app/modules/statements
+docker compose exec backend pytest
 ```
+
+Integration tests under `app/modules/<feature>/tests/` require Postgres with migrations applied; they skip automatically when the DB is unavailable (e.g. venv-only runs still execute structure/health tests).
 
 ## Step 5: Frontend
 
