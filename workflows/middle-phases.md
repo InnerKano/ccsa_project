@@ -30,7 +30,7 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
   - [ ] **A4.2** — Auth screens on design system + protected routes + app shell — **implemented, pending your audit/commit**
   - [ ] **A4.3** — Upload screen (`POST /api/statements`) — **implemented, pending your audit/commit**
   - [ ] **A4.4** — Dashboard hub (`/dashboard` — list statements, run analysis) — **implemented, pending your audit/commit**
-  - [ ] **A4.5** — Results screen (`/analysis/[id]` — subscriptions, totals, recommendations)
+  - [ ] **A4.5** — Results screen (`/analysis/[id]` — subscriptions, totals, recommendations) — **implemented, pending your audit/commit**
   - [ ] **A4.6** — Docs closeout (remaining items only — several aligned with A4.1: `middle-phases.md`, `implement-feature.md` Step 5/6/8, `API.md` CORS, `ARCHITECTURE.md` frontend layout, root `README.md`, `AI_LOG.md`, `frontend/*/README.md`)
 - [ ] A5 — Sample CSV (done alongside A2 — synthetic `sample.csv` / `sample_es.csv`)
 - [ ] Should Have (LLM, category summaries)
@@ -151,6 +151,6 @@ Notes specific to this stretch:
 
 ## Next step
 
-**A4.5 — results screen** (`app/analysis/[id]` — full subscription breakdown + recommendations), after A4.4 is audited and committed. A4.4 shipped: `lib/api/analysis.ts`, dashboard statement list (SWR), run/re-run analysis, link to latest result; `/analysis/[id]` shows headline KPIs (A4.5 extends with full breakdown).
+**A4.6 — docs closeout** (remaining workflow/README alignment), after A4.5 is audited and committed. A4.5 shipped: full `/analysis/[id]` breakdown — `AnalysisDetailView`, `SubscriptionList`, `RecommendationList`, statement currency via `getStatement`, empty states per DESIGN.md. **Phase A success criterion** (register → upload → see subscriptions + savings → return later) is met end-to-end in the browser once A4.5 is committed.
 
 Remaining A4 sub-phases close the Phase A success criterion: upload → dashboard → results (register → upload → see subscriptions + savings → return later). LLM work (Phase B) starts only once Phase A meets that criterion.

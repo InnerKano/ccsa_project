@@ -9,7 +9,7 @@ lib/
 ├── api/
 │   ├── client.ts      # apiFetch + ApiError — all HTTP goes through this
 │   ├── auth.ts        # register / login
-│   ├── statements.ts  # upload + list
+│   ├── statements.ts  # upload, list, get
 │   └── analysis.ts    # run + list + get
 ├── auth/
 │   ├── session.ts     # token read/write (localStorage — single persistence seam)

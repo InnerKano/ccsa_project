@@ -73,3 +73,19 @@ export function uploadStatement(
 export function listStatements(): Promise<StatementSummary[]> {
   return apiFetch<StatementSummary[]>("/api/statements");
 }
+
+export type TransactionSummary = {
+  id: string;
+  date: string;
+  description: string;
+  amount: string;
+  category: string | null;
+};
+
+export type StatementDetail = StatementSummary & {
+  transactions: TransactionSummary[];
+};
+
+export function getStatement(statementId: string): Promise<StatementDetail> {
+  return apiFetch<StatementDetail>(`/api/statements/${statementId}`);
+}

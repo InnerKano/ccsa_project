@@ -17,6 +17,11 @@ components/
 ├── dashboard/
 │   ├── StatementCard.tsx
 │   └── StatementList.tsx
+├── analysis/
+│   ├── AnalysisDetailView.tsx
+│   ├── AnalysisSummaryCards.tsx
+│   ├── SubscriptionList.tsx
+│   └── RecommendationList.tsx
 └── ui/                   # primitives (Button, Field, Card, …)
 ```
 
