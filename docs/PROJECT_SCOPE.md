@@ -33,7 +33,7 @@
 ### Must Have
 
 - **Auth:** register / login. Each user only sees their own data.
-- **CSV upload:** upload a statement CSV with column mapping (date, description, amount) and format validation.
+- **CSV upload:** upload a **delimited** transaction export (CSV/TSV) with column inference or explicit mapping (date, description, amount, or debit/credit), locale-aware parsing (EN/ES, US/EU number formats), and format validation. Raw PDF/statement dumps are out of MVP (D15, Could Have).
 - **Parsing + rules-based categorization (Layer 1, no AI):** normalize transactions and classify by keywords/regex (e.g., "NETFLIX" → subscription/streaming).
 - **Recurring/subscription detection:** identify merchants that repeat with stable amounts and cadence.
 - **Estimated savings + basic recommendations:** monthly subscription totals and an actionable list ("cancel X ≈ save $Y/month"), computed by rules.
@@ -49,7 +49,8 @@
 ### Could Have
 
 - Automatic import via **Plaid** (instead of manual CSV upload). [Check feasibility with bank API keys.]
-- **PDF parsing** of bank statements.
+- **PDF parsing** of bank statements — and, related, parsing of PDF-exported-to-`.csv` statement dumps (fixed-width, multi-line, page noise). See D15: enabled by the pluggable `ingest/` design, deferred out of MVP.
+- **Per-bank format profiles** (e.g. Banco de Bogotá, Cash App) as ingestion adapters.
 - Month-over-month comparison and alerts for new subscriptions.
 - Detection of fees/charges in addition to subscriptions.
 

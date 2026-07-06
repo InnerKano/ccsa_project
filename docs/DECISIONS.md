@@ -197,3 +197,18 @@ These decisions extend or deviate from the defaults and directly answer question
 **Decision**: No admin/supervisor roles.
 
 **Rationale**: single-consumer product per REQUIREMENTS §1, no organizational use case; user isolation via user_id scoping is sufficient. RBAC listed as secondary/optional in PROJECT_SCOPE, not required for this MVP.
+
+### D15 — Supported input = delimited transaction export (not raw statement dumps)
+**Decision**: The MVP ingests a **delimited** file (CSV/TSV) whose header row exposes a date, a description, and either an amount column or a debit/credit pair. Real inputs vary, so the parser handles: encoding fallbacks (UTF-8 / Latin-1), multiple date formats (ISO, DD/MM, MM/DD, English **and** Spanish month names), locale-aware amounts (US `1,234.56` and EU/LatAm `1.234,56`), several sign conventions (`-`, `(…)`, `+` prefix, currency symbols, debit/credit columns), delimiter sniffing, and a small header preamble. Column names are inferred from an EN+ES vocabulary or provided via explicit mapping.
+
+**This refines** REQUIREMENTS §3's assumption "the user can export CSV". The realistic distinction: a **transaction export** (delimited, from online banking) is supported; a **statement PDF** — or a PDF exported to `.csv` as fixed-width, multi-line, page-noise text (see the real fixtures) — is **not** parsed in the MVP. Per REQUIREMENTS's own policy, that history is not rewritten there; this decision records the refinement.
+
+**Alternatives considered**:
+- Parse the raw PDF/statement dump now → rejected: fixed-width + multi-line + watermark noise + per-bank layout is effectively PDF extraction; high effort and brittle, contradicts D1 and Risk #3 (over-engineering), and jeopardizes the MVP.
+- Keep the idealized single sample → rejected: not representative; demo would look like a toy.
+
+**Design consequence (modularity)**: ingestion is a pluggable pipeline under `modules/statements/ingest/` — `base.py` (contracts), `normalizers.py`, `delimited.py`, `registry.py`. A future **PDF-dump parser** or **bank-specific profile** is added by implementing `StatementParser` and registering it in `registry.py`; `api.py` and the persistence path do not change. This is how D1's "remain modular and extensible" is honored concretely.
+
+**Data-handling consequence**: real bank statements contain PII/financial data. Repo fixtures are **synthetic** (`sample.csv` US, `sample_es.csv` LatAm); `.gitignore` keeps `*.csv` out by default and only whitelists those two. Real exports must never be committed (`DATA_MODEL.md` §4, `AI_RULES.md` Red zone).
+
+**Deferred to Could Have** (`PROJECT_SCOPE.md`): PDF/statement-dump parsing, per-bank format profiles, and multi-currency conversion (a `currency` per statement is stored but not converted, per REQUIREMENTS §5).

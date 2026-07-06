@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.modules.statements.tests.conftest import SAMPLE_CSV
+from app.modules.statements.tests.conftest import SAMPLE_CSV, SAMPLE_ES_CSV
 
 pytestmark = pytest.mark.integration
 
@@ -21,9 +21,25 @@ def test_upload_statement_persists_transactions(
     body = response.json()
     assert body["filename"] == "sample.csv"
     assert body["currency"] == "USD"
-    assert body["transaction_count"] == 9
+    assert body["transaction_count"] == 15
     assert "id" in body
     assert "uploaded_at" in body
+
+
+def test_upload_spanish_latam_statement(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    with SAMPLE_ES_CSV.open("rb") as csv_file:
+        response = client.post(
+            "/api/statements",
+            files={"file": ("sample_es.csv", csv_file, "text/csv")},
+            data={"currency": "COP"},
+            headers=auth_headers,
+        )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["currency"] == "COP"
+    assert body["transaction_count"] == 11
 
 
 def test_list_statements_returns_metadata_only(
@@ -60,7 +76,7 @@ def test_get_statement_includes_transactions(
     assert response.status_code == 200
     body = response.json()
     assert body["id"] == statement_id
-    assert len(body["transactions"]) == 9
+    assert len(body["transactions"]) == 15
     first = body["transactions"][0]
     assert {"id", "date", "description", "amount", "category"} <= first.keys()
     assert first["category"] is None

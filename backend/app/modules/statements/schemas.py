@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class StatementResponse(BaseModel):
@@ -35,10 +35,3 @@ class StatementDetailResponse(BaseModel):
     transactions: list[TransactionResponse]
 
     model_config = {"from_attributes": True}
-
-
-class ColumnMapping(BaseModel):
-    date_column: str | None = None
-    description_column: str | None = None
-    amount_column: str | None = None
-    currency: str = Field(default="USD", min_length=3, max_length=3)

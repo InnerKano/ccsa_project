@@ -22,7 +22,8 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] Alembic + `get_db`
 - [x] Structure validated (bootstrap complete)
 - [x] A1 — Auth (register/login, JWT, `users` migration, `get_current_user`) — **pending your audit/commit**
-- [ ] A2 — Statements — **implemented, pending audit/commit**
+- [ ] A2 — Statements (CSV upload + persistence) — **implemented, pending audit/commit**
+- [ ] A2.1 — Ingestion hardening (modular parser: formats/locales/encoding, EN+ES, US/EU, debit-credit) — **implemented, pending audit/commit**
 - [ ] Should Have (LLM, sample CSV, category summaries)
 - [ ] Deploy + video
 
@@ -60,6 +61,8 @@ Each delivery must leave something usable in the browser or via `curl`.
 | A5 | Sample CSV | `backend/fixtures/` (or similar) | Mitigates risk #1 (format inconsistency) | testable without real data |
 
 One `implement-feature.md` cycle per delivery (A1–A3 backend; A4 integrated frontend; A5 rides along with A2).
+
+**A2.1 — ingestion hardening (inserted between A2 and A3).** After A2 shipped a working upload against an idealized CSV, real bank exports (see `backend/fixtures/` real samples) showed the contract was too optimistic: different delimiters, languages (EN/ES), date orientations, decimal styles (US `1,234.56` vs LatAm `1.234,56`), sign conventions, and encodings. A2.1 refactors parsing into a **pluggable pipeline** (`modules/statements/ingest/`) that handles delimited exports robustly and leaves PDF/statement-dump parsing as a future adapter (D15). This is a scoped realism pass, not scope creep — it keeps the MVP usable by real users without chasing per-bank PDF parsing.
 
 Touch points:
 - Backend: `modules/<feature>/`, `core/models.py`, `main.py` (router registration), `API.md`
@@ -128,4 +131,4 @@ Notes specific to this stretch:
 
 ## Next step
 
-**A2 — statements** (CSV upload), via `implement-feature.md`, after A1 is audited and committed. Then A3 → A4 in order, each with a verifiable demo. LLM work starts only once Phase A meets the success criterion. Documentation updates during this stretch are limited to `API.md`, `AI_LOG.md`, and `DECISIONS.md` (only for non-obvious changes) — no new docs beyond this one.
+**A3 — analysis (Layer 1, rules)**, via `implement-feature.md`, after A2 + A2.1 are audited and committed. A3 must be **bilingual-ready** in its category/merchant rules (EN + ES keywords), since ingestion now accepts both. Then A4 in order, each with a verifiable demo. LLM work starts only once Phase A meets the success criterion. Documentation updates during this stretch are limited to `API.md`, `AI_LOG.md`, and `DECISIONS.md` (only for non-obvious changes) — no new docs beyond this one.

@@ -43,3 +43,6 @@ Thumbs.db
 # --- CSV uploads (Don't store raw data) ---
 uploads/
 *.csv
+# Exception: synthetic, PII-free demo fixtures are versioned on purpose.
+!backend/fixtures/sample.csv
+!backend/fixtures/sample_es.csv

@@ -28,9 +28,10 @@ Bootstrap (Steps 1–5) and Phase A1 are complete. See [`workflows/middle-phases
 |---|---|---|
 | A1 | Auth (register/login, JWT) | ✅ Done |
 | A2 | Statements (CSV upload) | ✅ Done — pending audit |
+| A2.1 | Ingestion hardening (formats/locales, EN+ES, US/EU) | ✅ Done — pending audit |
 | A3 | Analysis (Layer 1, rules) | ⬜ Next |
 | A4 | Frontend vertical slice + CORS | ⬜ Pending |
-| A5 | Sample CSV fixture | ✅ Done (with A2) |
+| A5 | Sample CSV fixtures (US + LatAm, synthetic) | ✅ Done (with A2/A2.1) |
 
 > CORS is intentionally not configured yet — it ships with A4. Until then, `localhost:3000` can render the auth screens but browser requests to the API will be blocked; use `curl` or Swagger to exercise endpoints manually (see "Trying it out manually" below).
 

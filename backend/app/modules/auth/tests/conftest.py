@@ -36,7 +36,9 @@ def require_postgres() -> None:
 def db_session() -> Generator[Session, None, None]:
     connection = engine.connect()
     transaction = connection.begin()
-    session = Session(bind=connection)
+    # create_savepoint: the app's own commit()s land in a savepoint so the outer
+    # rollback below fully isolates each test (no leaked rows between runs).
+    session = Session(bind=connection, join_transaction_mode="create_savepoint")
     try:
         yield session
     finally:

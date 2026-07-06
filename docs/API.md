@@ -97,12 +97,18 @@ Fixed kit base — does not change between projects.
 ### Statements (CSV upload and parsing)
 
 #### POST /api/statements
-Uploads a transaction CSV. Parsed in memory; **the raw file is not stored**, only normalized transactions. Accepts optional column mapping when headers differ from the expected defaults.
+Uploads a **delimited** transaction export (CSV/TSV; `.csv`/`.tsv`/`.txt`). Parsed in memory; **the raw file is not stored**, only normalized transactions. Delimiter, locale (date orientation, decimal style), and column names are auto-detected, with optional overrides. Raw PDF/statement dumps are not supported (D15).
 
 **Request**: `multipart/form-data`
-- `file`: CSV file (required)
-- `date_column`, `description_column`, `amount_column`: column names (optional; inferred if omitted)
-- `currency`: statement currency code (optional, config default)
+- `file`: delimited file (required)
+- `date_column`, `description_column`, `amount_column`: column names (optional; inferred from an EN+ES vocabulary if omitted)
+- `debit_column`, `credit_column`: use instead of `amount_column` when charges/credits are in separate columns (debit → negative, credit → positive)
+- `date_format`: explicit strptime format (optional, e.g. `%d/%m/%Y`)
+- `dayfirst`: `true`/`false` to force `DD/MM` vs `MM/DD` (optional; auto-detected otherwise)
+- `decimal_style`: `auto` (default) | `us` (`1,234.56`) | `eu` (`1.234,56`)
+- `currency`: 3-letter statement currency code (optional, default `USD`)
+
+Errors: `400` if the format is unrecognized (e.g. a PDF dump), the file is empty/non-delimited, or a row cannot be parsed. Error messages never include row content.
 
 **Response**: `201 Created`
 ```json

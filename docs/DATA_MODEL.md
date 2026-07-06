@@ -142,12 +142,21 @@ When **Layer 2 (LLM)** runs, `Sensitive` fields (`description`, `amount`) may be
 
 ---
 
-## 5. Ingest normalization (`transactions.description`)
+## 5. Ingest normalization
 
-To avoid storing noisy or oversized sensitive strings:
+Parsing is a pluggable pipeline in `modules/statements/ingest/` (D15). Supported input is a **delimited** transaction export; raw PDF/statement dumps are out of MVP.
+
+**`transactions.description`** — to avoid storing noisy or oversized sensitive strings:
 - Trim whitespace and collapse repeated spaces.
 - Truncate to the column limit (512).
 - No enrichment that adds new PII (e.g. no geolocation lookups).
+- Faithful to the source (D7): no merchant canonicalization at ingest.
+
+**`transactions.date`** — accepted formats: ISO (`YYYY-MM-DD`), numeric with auto-detected orientation (`DD/MM` vs `MM/DD`, voting across the column; overridable via `dayfirst`/`date_format`), and English/Spanish month names (`Sep 4 2023`, `4 de abril de 2026`). Stored as a normalized `DATE`.
+
+**`transactions.amount`** — parsed as `Decimal` (never float, §2). Handles US (`1,234.56`) and EU/LatAm (`1.234,56`) notation (auto-detected or forced via `decimal_style`), sign conventions (`-`, `(…)`, leading `+`, trailing `-`), and currency symbols. Debit/credit column pairs are combined into a signed amount (debit negative, credit positive).
+
+**Encoding** — decoded with UTF-8 first, falling back to Latin-1/CP1252 so non-UTF-8 exports do not fail. Parse errors never echo row content (`API.md`).
 
 ---
 

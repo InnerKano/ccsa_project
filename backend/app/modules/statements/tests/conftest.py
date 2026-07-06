@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +14,7 @@ from app.main import app
 
 FIXTURES_DIR = Path(__file__).resolve().parents[4] / "fixtures"
 SAMPLE_CSV = FIXTURES_DIR / "sample.csv"
+SAMPLE_ES_CSV = FIXTURES_DIR / "sample_es.csv"
 
 
 def _postgres_ready() -> bool:
@@ -39,7 +41,9 @@ def require_postgres() -> None:
 def db_session() -> Generator[Session, None, None]:
     connection = engine.connect()
     transaction = connection.begin()
-    session = Session(bind=connection)
+    # create_savepoint: the app's own commit()s land in a savepoint so the outer
+    # rollback below fully isolates each test (no leaked rows between runs).
+    session = Session(bind=connection, join_transaction_mode="create_savepoint")
     try:
         yield session
     finally:
@@ -62,23 +66,20 @@ def client(db_session: Session) -> Generator[TestClient, None, None]:
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def auth_headers(client: TestClient) -> dict[str, str]:
+def _register(client: TestClient, prefix: str) -> dict[str, str]:
     response = client.post(
         "/api/auth/register",
-        json={"email": "statements-user@example.com", "password": "securepassword123"},
+        json={"email": f"{prefix}-{uuid4().hex}@example.com", "password": "securepassword123"},
     )
     assert response.status_code == 201
-    token = response.json()["token"]
-    return {"Authorization": f"Bearer {token}"}
+    return {"Authorization": f"Bearer {response.json()['token']}"}
+
+
+@pytest.fixture
+def auth_headers(client: TestClient) -> dict[str, str]:
+    return _register(client, "statements-user")
 
 
 @pytest.fixture
 def other_user_headers(client: TestClient) -> dict[str, str]:
-    response = client.post(
-        "/api/auth/register",
-        json={"email": "other-user@example.com", "password": "securepassword123"},
-    )
-    assert response.status_code == 201
-    token = response.json()["token"]
-    return {"Authorization": f"Bearer {token}"}
+    return _register(client, "other-user")
