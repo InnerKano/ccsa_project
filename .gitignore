@@ -46,3 +46,11 @@ uploads/
 # Exception: synthetic, PII-free demo fixtures are versioned on purpose.
 !backend/fixtures/sample.csv
 !backend/fixtures/sample_es.csv
+!backend/fixtures/samples/*.csv
+
+# --- Real bank statement samples (contain real PII — NEVER commit) ---
+# Everything under real_samples/ (CSV, PDF, DOCX, …) stays local only.
+# See docs/DECISIONS.md D15 and docs/AI_RULES.md (Red zone).
+backend/fixtures/real_samples/
+*.pdf
+*.docx

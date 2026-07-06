@@ -23,7 +23,10 @@ from typing import Protocol, Sequence
 from app.modules.analysis.rules.vocabulary import (
     CATEGORY_KEYWORDS,
     DISCRETIONARY_CATEGORIES,
+    KNOWN_SUBSCRIPTIONS,
     MERCHANT_ALIASES,
+    MERCHANT_NOISE_TOKENS,
+    RECURRING_MARKERS,
 )
 
 _CENTS = Decimal("0.01")
@@ -71,16 +74,31 @@ def canonical_merchant(description: str) -> str:
     """Derive a stable, canonical merchant name from a raw bank description (D7).
 
     Known brands map to a fixed name; unknown merchants are reduced to their
-    leading significant words (dropping store numbers, ``*`` refs, punctuation)
-    so repeated charges from the same place group together.
+    leading significant words so repeated charges from the same place group
+    together. Real statements pad descriptions with transaction plumbing
+    (``CHECKCARD 0524 ...``, ``PMNT SENT ...``, ``SQ *...``), store numbers and
+    reference IDs — those are dropped here so the same merchant is not split into
+    several groups (D17). Tokens that contain any digit (store #s, ref numbers,
+    city/state-glued codes) and known boilerplate tokens are removed.
     """
     upper = description.upper()
     for keyword, canonical, _ in MERCHANT_ALIASES:
         if keyword in upper:
             return canonical
     cleaned = _NON_ALPHANUM.sub(" ", upper)
-    tokens = [token for token in cleaned.split() if not token.isdigit()]
+    tokens = [
+        token
+        for token in cleaned.split()
+        if not any(char.isdigit() for char in token)
+        and token not in MERCHANT_NOISE_TOKENS
+    ]
     return " ".join(tokens[:3]).strip() or upper.strip() or "UNKNOWN"
+
+
+def _has_recurring_marker(description: str) -> bool:
+    """True if the bank itself flagged the line as recurring (D17)."""
+    upper = description.upper()
+    return any(marker in upper for marker in RECURRING_MARKERS)
 
 
 def categorize(description: str) -> str:
@@ -114,9 +132,19 @@ def _is_stable(amounts: list[Decimal], representative: Decimal) -> bool:
 def _detect_subscriptions(transactions: Sequence[TransactionLike]) -> list[SubscriptionFinding]:
     """Group outflows by canonical merchant and keep the recurring ones.
 
-    Income and other inflows (amount >= 0) are never subscriptions. A group is
-    recurring when it appears in >= _MIN_RECURRING_MONTHS distinct months with a
-    stable charge amount.
+    Income and other inflows (amount >= 0) are never subscriptions. A merchant
+    group is treated as a subscription when any of these hold:
+
+    - **strong (multi-month):** it appears in >= _MIN_RECURRING_MONTHS distinct
+      months with a stable charge amount → cadence ``monthly``.
+    - **bank marker:** the bank flagged a line as recurring (D17) → cadence
+      ``monthly`` (the bank asserts the cadence).
+    - **known service:** the canonical merchant is an inherently subscription
+      service (e.g. NETFLIX, MINT MOBILE) even from a single statement → cadence
+      ``suspected`` (honest: one occurrence is not proof of cadence, D17).
+
+    This lets the analyzer produce value on a single real statement, which the
+    multi-month rule alone could not (a lone upload = one month → nothing).
     """
     groups: dict[str, list[TransactionLike]] = defaultdict(list)
     for tx in transactions:
@@ -126,18 +154,27 @@ def _detect_subscriptions(transactions: Sequence[TransactionLike]) -> list[Subsc
 
     findings: list[SubscriptionFinding] = []
     for merchant, group in groups.items():
-        months = {(tx.date.year, tx.date.month) for tx in group}
-        if len(months) < _MIN_RECURRING_MONTHS:
-            continue
         amounts = [abs(tx.amount) for tx in group]
         representative = _median(amounts).quantize(_CENTS)
-        if not _is_stable(amounts, representative):
+        if representative <= 0:
             continue
+
+        months = {(tx.date.year, tx.date.month) for tx in group}
+        multi_month = len(months) >= _MIN_RECURRING_MONTHS and _is_stable(
+            amounts, representative
+        )
+        bank_marked = any(_has_recurring_marker(tx.description) for tx in group)
+        known_service = merchant in KNOWN_SUBSCRIPTIONS
+
+        if not (multi_month or bank_marked or known_service):
+            continue
+
+        cadence = "monthly" if (multi_month or bank_marked) else "suspected"
         findings.append(
             SubscriptionFinding(
                 merchant=merchant,
                 amount=representative,
-                cadence="monthly",
+                cadence=cadence,
                 category=categorize(group[0].description),
             )
         )
@@ -158,14 +195,22 @@ def _build_recommendations(
     for sub in subscriptions:
         if sub.category not in DISCRETIONARY_CATEGORIES:
             continue
+        if sub.cadence == "monthly":
+            detail = (
+                f"Recurring {sub.category} charge of about "
+                f"{sub.amount} detected every month. "
+                f"Cancelling it would save about {sub.amount} per month."
+            )
+        else:
+            detail = (
+                f"Likely {sub.category} subscription of about {sub.amount} "
+                f"found on this statement. Review it — cancelling would save "
+                f"about {sub.amount} per month."
+            )
         recommendations.append(
             RecommendationFinding(
                 title=f"Review {sub.merchant} subscription",
-                detail=(
-                    f"Recurring {sub.category} charge of about "
-                    f"{sub.amount} detected every month. "
-                    f"Cancelling it would save about {sub.amount} per month."
-                ),
+                detail=detail,
                 estimated_saving=sub.amount,
             )
         )

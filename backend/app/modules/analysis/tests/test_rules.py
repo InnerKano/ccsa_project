@@ -73,10 +73,57 @@ def test_income_is_never_a_subscription() -> None:
     assert result.estimated_savings == Decimal("0.00")
 
 
-def test_single_occurrence_is_not_recurring() -> None:
-    transactions = [Tx(date(2026, 1, 3), "NETFLIX.COM", Decimal("-15.49"))]
+def test_single_occurrence_of_unknown_merchant_is_not_recurring() -> None:
+    # An unfamiliar merchant seen once, with no bank recurring marker, is not
+    # enough evidence to call it a subscription.
+    transactions = [Tx(date(2026, 1, 3), "CORNER STORE 88", Decimal("-15.49"))]
     result = run_layer_one(transactions)
     assert result.subscriptions == []
+
+
+def test_single_occurrence_of_known_service_is_suspected() -> None:
+    # A known subscription service on a single statement is surfaced as a
+    # suspected subscription so a lone upload (= one month) still has value (D17).
+    transactions = [Tx(date(2026, 1, 3), "NETFLIX.COM", Decimal("-15.49"))]
+    result = run_layer_one(transactions)
+    assert len(result.subscriptions) == 1
+    sub = result.subscriptions[0]
+    assert sub.merchant == "NETFLIX"
+    assert sub.cadence == "suspected"
+    # streaming is discretionary → recommended and counted toward savings.
+    assert result.estimated_savings == Decimal("15.49")
+    assert result.recommendations[0].title == "Review NETFLIX subscription"
+
+
+def test_bank_recurring_marker_flags_single_occurrence() -> None:
+    # Bank of America appends "RECURRING" on the line; trust it even once.
+    transactions = [
+        Tx(
+            date(2026, 2, 22),
+            "CHECKCARD 0221 INSTACART SUBSCRIPTION HTTPSINSTACARCA RECURRING",
+            Decimal("-9.99"),
+        )
+    ]
+    result = run_layer_one(transactions)
+    assert len(result.subscriptions) == 1
+    assert result.subscriptions[0].cadence == "monthly"
+
+
+def test_canonical_merchant_strips_bank_noise() -> None:
+    # Real BOA-style plumbing must not split one merchant into many groups.
+    assert canonical_merchant("CHECKCARD 0524 GO CLEANERS TOWSON") == "GO CLEANERS TOWSON"
+    assert canonical_merchant("SQ *COLDSTONE CREAM BALTIMORE") == "COLDSTONE CREAM BALTIMORE"
+    assert canonical_merchant("PMNT SENT 0525 SQC CASH APP") == "SQC CASH APP"
+
+
+def test_categorize_covers_us_merchants() -> None:
+    assert categorize("HULU 8778244858 CA") == "streaming"
+    assert categorize("MINT MOBILE8006837392CA") == "telecom"
+    assert categorize("CHIPOTLE ONLINE") == "food"
+    assert categorize("EXXONMOBIL 47865886 EDGEWOOD") == "fuel"
+    assert categorize("GEICO INSURANCE") == "insurance"
+    assert categorize("TRADER JOE'S") == "groceries"
+    assert categorize("TARGET STORE 1122") == "shopping"
 
 
 def test_unstable_amount_is_not_recurring() -> None:

@@ -1,0 +1,129 @@
+Account Summary Export
+Account ending in 7734
+Statement Period: Jan 01, 2026 - Jun 30, 2026
+
+Trans. Date,Post Date,Description,Amount,Category
+Jan 1, 2026,Jan 1, 2026,"NETFLIX.COM",($15.49),Entertainment
+Jan 2, 2026,Jan 2, 2026,"SPOTIFY PREMIUM",($11.99),Entertainment
+Jan 5, 2026,Jan 5, 2026,"ADOBE CREATIVE CLOUD",($54.99),Software
+Jan 7, 2026,Jan 7, 2026,"XBOX GAME PASS ULTIMATE",($16.99),Entertainment
+Jan 8, 2026,Jan 8, 2026,"LA FITNESS",($42.99),Health & Fitness
+Jan 9, 2026,Jan 9, 2026,"STATE FARM INSURANCE",($145.00),Insurance
+Jan 10, 2026,Jan 10, 2026,"AT&T WIRELESS",($95.32),Bills & Utilities
+Jan 13, 2026,Jan 13, 2026,"CITY WATER UTILITY",($42.10),Bills & Utilities
+Jan 14, 2026,Jan 14, 2026,"UBER TRIP",($21.22),Transport
+Jan 17, 2026,Jan 17, 2026,"TARGET STORE 1122",($153.48),Shopping
+Jan 20, 2026,Jan 20, 2026,"TRADER JOE'S",($60.98),Groceries
+Jan 22, 2026,Jan 22, 2026,"AMAZON.COM",($112.23),Shopping
+Jan 23, 2026,Jan 23, 2026,"STARBUCKS STORE 4471",($7.79),Dining
+Jan 24, 2026,Jan 24, 2026,"WHOLE FOODS MARKET",($94.91),Groceries
+Jan 26, 2026,Jan 26, 2026,"PANERA BREAD",($10.22),Dining
+Jan 27, 2026,Jan 27, 2026,"LYFT RIDE",($29.14),Transport
+Jan 27, 2026,Jan 27, 2026,"BEST BUY 00456",($75.55),Shopping
+Jan 27, 2026,Jan 27, 2026,"CHEVRON 0091",($32.42),Gas
+Jan 27, 2026,Jan 27, 2026,"KROGER #532",($80.19),Groceries
+Jan 27, 2026,Jan 27, 2026,"CHIPOTLE ONLINE",($17.30),Dining
+Jan 27, 2026,Jan 27, 2026,"CARD PAYMENT - THANK YOU",$571.22,Payment
+Feb 4, 2026,Feb 4, 2026,"NETFLIX.COM",($15.49),Entertainment
+Feb 5, 2026,Feb 5, 2026,"SPOTIFY PREMIUM",($11.99),Entertainment
+Feb 8, 2026,Feb 8, 2026,"ADOBE CREATIVE CLOUD",($54.99),Software
+Feb 10, 2026,Feb 10, 2026,"XBOX GAME PASS ULTIMATE",($16.99),Entertainment
+Feb 13, 2026,Feb 13, 2026,"LA FITNESS",($42.99),Health & Fitness
+Feb 16, 2026,Feb 16, 2026,"STATE FARM INSURANCE",($145.00),Insurance
+Feb 18, 2026,Feb 18, 2026,"AT&T WIRELESS",($95.32),Bills & Utilities
+Feb 21, 2026,Feb 21, 2026,"CITY WATER UTILITY",($58.90),Bills & Utilities
+Feb 22, 2026,Feb 22, 2026,"TRADER JOE'S",($71.78),Groceries
+Feb 24, 2026,Feb 24, 2026,"WHOLE FOODS MARKET",($68.13),Groceries
+Feb 26, 2026,Feb 26, 2026,"BEST BUY 00456",($102.38),Shopping
+Feb 27, 2026,Feb 27, 2026,"SHELL OIL 5741",($47.55),Gas
+Feb 27, 2026,Feb 27, 2026,"CHEVRON 0091",($46.20),Gas
+Feb 27, 2026,Feb 27, 2026,"LYFT RIDE",($22.70),Transport
+Feb 27, 2026,Feb 27, 2026,"STARBUCKS STORE 4471",($7.65),Dining
+Feb 27, 2026,Feb 27, 2026,"PANERA BREAD",($11.70),Dining
+Feb 27, 2026,Feb 27, 2026,"UBER TRIP",($29.79),Transport
+Feb 27, 2026,Feb 27, 2026,"AMAZON.COM",($128.55),Shopping
+Feb 27, 2026,Feb 27, 2026,"CHIPOTLE ONLINE",($16.85),Dining
+Feb 27, 2026,Feb 27, 2026,"KROGER #532",($61.45),Groceries
+Feb 27, 2026,Feb 27, 2026,"TARGET RETURN",$24.99,Shopping
+Feb 27, 2026,Feb 27, 2026,"CARD PAYMENT - THANK YOU",$618.20,Payment
+Mar 1, 2026,Mar 1, 2026,"NETFLIX.COM",($15.49),Entertainment
+Mar 2, 2026,Mar 2, 2026,"SPOTIFY PREMIUM",($11.99),Entertainment
+Mar 5, 2026,Mar 5, 2026,"ADOBE CREATIVE CLOUD",($54.99),Software
+Mar 8, 2026,Mar 8, 2026,"XBOX GAME PASS ULTIMATE",($16.99),Entertainment
+Mar 10, 2026,Mar 10, 2026,"LA FITNESS",($42.99),Health & Fitness
+Mar 11, 2026,Mar 11, 2026,"STATE FARM INSURANCE",($145.00),Insurance
+Mar 14, 2026,Mar 14, 2026,"AT&T WIRELESS",($102.10),Bills & Utilities
+Mar 16, 2026,Mar 16, 2026,"CITY WATER UTILITY",($71.30),Bills & Utilities
+Mar 18, 2026,Mar 18, 2026,"PANERA BREAD",($15.98),Dining
+Mar 19, 2026,Mar 19, 2026,"KROGER #532",($75.48),Groceries
+Mar 20, 2026,Mar 20, 2026,"CHEVRON 0091",($48.89),Gas
+Mar 21, 2026,Mar 21, 2026,"UBER TRIP",($13.06),Transport
+Mar 22, 2026,Mar 22, 2026,"SHELL OIL 5741",($49.80),Gas
+Mar 24, 2026,Mar 24, 2026,"BEST BUY 00456",($199.10),Shopping
+Mar 26, 2026,Mar 26, 2026,"CHIPOTLE ONLINE",($13.82),Dining
+Mar 27, 2026,Mar 27, 2026,"LYFT RIDE",($20.58),Transport
+Mar 27, 2026,Mar 27, 2026,"TARGET STORE 1122",($193.55),Shopping
+Mar 27, 2026,Mar 27, 2026,"STARBUCKS STORE 4471",($7.40),Dining
+Mar 27, 2026,Mar 27, 2026,"TRADER JOE'S",($74.09),Groceries
+Mar 27, 2026,Mar 27, 2026,"WHOLE FOODS MARKET",($97.54),Groceries
+Mar 27, 2026,Mar 27, 2026,"CAFÉ FRANÇAIS PARIS FR",($38.50),Dining
+Mar 27, 2026,Mar 27, 2026,"CARD PAYMENT - THANK YOU",$568.96,Payment
+Apr 4, 2026,Apr 4, 2026,"NETFLIX.COM 866-579-7172",($17.99),Entertainment
+Apr 5, 2026,Apr 5, 2026,"SPOTIFY PREMIUM",($11.99),Entertainment
+Apr 7, 2026,Apr 7, 2026,"ADOBE CREATIVE CLOUD",($54.99),Software
+Apr 8, 2026,Apr 8, 2026,"XBOX GAME PASS ULTIMATE",($16.99),Entertainment
+Apr 11, 2026,Apr 11, 2026,"STATE FARM INSURANCE",($145.00),Insurance
+Apr 14, 2026,Apr 14, 2026,"AT&T WIRELESS",($95.32),Bills & Utilities
+Apr 16, 2026,Apr 16, 2026,"CITY WATER UTILITY",($39.00),Bills & Utilities
+Apr 19, 2026,Apr 19, 2026,"TARGET STORE 1122",($143.80),Shopping
+Apr 21, 2026,Apr 21, 2026,"TRADER JOE'S",($40.97),Groceries
+Apr 23, 2026,Apr 23, 2026,"BEST BUY 00456",($269.68),Shopping
+Apr 25, 2026,Apr 25, 2026,"CHEVRON 0091",($35.99),Gas
+Apr 26, 2026,Apr 26, 2026,"LYFT RIDE",($27.56),Transport
+Apr 27, 2026,Apr 27, 2026,"SHELL OIL 5741",($32.14),Gas
+Apr 27, 2026,Apr 27, 2026,"UBER TRIP",($26.32),Transport
+Apr 27, 2026,Apr 27, 2026,"KROGER #532",($88.29),Groceries
+Apr 27, 2026,Apr 27, 2026,"STARBUCKS STORE 4471",($7.30),Dining
+Apr 27, 2026,Apr 27, 2026,"WHOLE FOODS MARKET",($68.26),Groceries
+Apr 27, 2026,Apr 27, 2026,"TARGET RETURN",$24.99,Shopping
+Apr 27, 2026,Apr 27, 2026,"CARD PAYMENT - THANK YOU",$621.93,Payment
+May 2, 2026,May 2, 2026,"NETFLIX.COM 866-579-7172",($17.99),Entertainment
+May 5, 2026,May 5, 2026,"SPOTIFY PREMIUM",($11.99),Entertainment
+May 8, 2026,May 8, 2026,"ADOBE CREATIVE CLOUD",($54.99),Software
+May 11, 2026,May 11, 2026,"XBOX GAME PASS ULTIMATE",($16.99),Entertainment
+May 12, 2026,May 12, 2026,"STATE FARM INSURANCE",($145.00),Insurance
+May 15, 2026,May 15, 2026,"AT&T WIRELESS",($95.32),Bills & Utilities
+May 17, 2026,May 17, 2026,"CITY WATER UTILITY",($44.20),Bills & Utilities
+May 19, 2026,May 19, 2026,"BEST BUY 00456",($197.11),Shopping
+May 20, 2026,May 20, 2026,"CHIPOTLE ONLINE",($10.71),Dining
+May 23, 2026,May 23, 2026,"PANERA BREAD",($8.47),Dining
+May 24, 2026,May 24, 2026,"TARGET STORE 1122",($202.03),Shopping
+May 26, 2026,May 26, 2026,"LYFT RIDE",($11.42),Transport
+May 27, 2026,May 27, 2026,"TRADER JOE'S",($53.92),Groceries
+May 27, 2026,May 27, 2026,"AMAZON.COM",($50.35),Shopping
+May 27, 2026,May 27, 2026,"STARBUCKS STORE 4471",($7.62),Dining
+May 27, 2026,May 27, 2026,"WHOLE FOODS MARKET",($88.81),Groceries
+May 27, 2026,May 27, 2026,"KROGER #532",($89.23),Groceries
+May 27, 2026,May 27, 2026,"CHEVRON 0091",($34.76),Gas
+May 27, 2026,May 27, 2026,"SHELL OIL 5741",($46.47),Gas
+May 27, 2026,May 27, 2026,"CARD PAYMENT - THANK YOU",$622.01,Payment
+Jun 4, 2026,Jun 4, 2026,"NETFLIX.COM 866-579-7172",($17.99),Entertainment
+Jun 7, 2026,Jun 7, 2026,"SPOTIFY PREMIUM",($11.99),Entertainment
+Jun 8, 2026,Jun 8, 2026,"ADOBE CREATIVE CLOUD",($54.99),Software
+Jun 11, 2026,Jun 11, 2026,"XBOX GAME PASS ULTIMATE",($16.99),Entertainment
+Jun 14, 2026,Jun 14, 2026,"STATE FARM INSURANCE",($145.00),Insurance
+Jun 17, 2026,Jun 17, 2026,"AT&T WIRELESS",($95.32),Bills & Utilities
+Jun 18, 2026,Jun 18, 2026,"CITY WATER UTILITY",($66.10),Bills & Utilities
+Jun 19, 2026,Jun 19, 2026,"UBER TRIP",($15.57),Transport
+Jun 20, 2026,Jun 20, 2026,"CHIPOTLE ONLINE",($18.74),Dining
+Jun 21, 2026,Jun 21, 2026,"TRADER JOE'S",($62.16),Groceries
+Jun 24, 2026,Jun 24, 2026,"SHELL OIL 5741",($32.45),Gas
+Jun 27, 2026,Jun 27, 2026,"AMAZON.COM",($179.88),Shopping
+Jun 27, 2026,Jun 27, 2026,"TARGET STORE 1122",($214.11),Shopping
+Jun 27, 2026,Jun 27, 2026,"CHEVRON 0091",($34.16),Gas
+Jun 27, 2026,Jun 27, 2026,"PANERA BREAD",($11.85),Dining
+Jun 27, 2026,Jun 27, 2026,"BEST BUY 00456",($275.61),Shopping
+Jun 27, 2026,Jun 27, 2026,"LYFT RIDE",($17.58),Transport
+Jun 27, 2026,Jun 27, 2026,"WHOLE FOODS MARKET",($73.26),Groceries
+Jun 27, 2026,Jun 27, 2026,"TARGET RETURN",$24.99,Shopping
+Jun 27, 2026,Jun 27, 2026,"CARD PAYMENT - THANK YOU",$621.91,Payment
