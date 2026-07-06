@@ -52,7 +52,7 @@ backend/app/modules/statements/
 └── services.py       # only if logic is non-trivial; omit for direct CRUD
 ```
 
-**When a feature must absorb real-world variability** (many input formats, providers, locales), isolate that behind a small pluggable sub-package with a base contract + a registry, so new variants are added without touching `api.py`. Example: `modules/statements/ingest/` (`base.py` contracts → `delimited.py` implementation → `registry.py` selection). This keeps the controller thin and the feature open to extension (see `DECISIONS.md` D15). Do not over-abstract when there is only one format — introduce the seam when the second variant appears.
+**When a feature must absorb real-world variability** (many input formats, providers, locales), isolate that behind a small pluggable sub-package with a base contract + a registry, so new variants are added without touching `api.py`. Example: `modules/statements/ingest/` — `base.py` (contracts) → `columns.py` (shared date/description/amount mapping) → `delimited.py` / `pdf/` (format adapters) → `registry.py` (selection). This keeps the controller thin and the feature open to extension (see `DECISIONS.md` D15, D18). Do not over-abstract when there is only one format — introduce the seam when the second variant appears.
 
 **models.py**
 ```python

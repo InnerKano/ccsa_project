@@ -1,4 +1,4 @@
-"""Statements HTTP routes — CSV upload, list, detail, delete."""
+"""Statements HTTP routes — statement upload, list, detail, delete."""
 
 from uuid import UUID
 
@@ -22,7 +22,7 @@ from app.modules.statements.services import (
 
 router = APIRouter(prefix="/api/statements", tags=["statements"])
 
-_ALLOWED_EXTENSIONS = (".csv", ".txt", ".tsv")
+_ALLOWED_EXTENSIONS = (".csv", ".txt", ".tsv", ".pdf")
 
 
 @router.post("/", response_model=StatementResponse, status_code=status.HTTP_201_CREATED)
@@ -43,7 +43,7 @@ async def upload_statement(
     if not file.filename or not file.filename.lower().endswith(_ALLOWED_EXTENSIONS):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File must be a delimited text export (.csv, .tsv, or .txt)",
+            detail="File must be a delimited export (.csv, .tsv, .txt) or bank statement (.pdf)",
         )
     if len(currency) != 3:
         raise HTTPException(

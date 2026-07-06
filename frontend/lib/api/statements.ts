@@ -27,7 +27,7 @@ export type UploadStatementOptions = {
   date_format?: string;
 };
 
-const ALLOWED_EXTENSIONS = [".csv", ".tsv", ".txt"];
+const ALLOWED_EXTENSIONS = [".csv", ".tsv", ".txt", ".pdf"];
 
 export function isAllowedStatementFile(file: File): boolean {
   const name = file.name.toLowerCase();

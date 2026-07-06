@@ -109,13 +109,13 @@ Fixed kit base — does not change between projects.
 
 ---
 
-### Statements (CSV upload and parsing)
+### Statements (statement upload and parsing)
 
 #### POST /api/statements
-Uploads a **delimited** transaction export (CSV/TSV; `.csv`/`.tsv`/`.txt`). Parsed in memory; **the raw file is not stored**, only normalized transactions. Delimiter, locale (date orientation, decimal style), and column names are auto-detected, with optional overrides. Raw PDF/statement dumps are not supported (D15).
+Uploads a **delimited export** (CSV/TSV/TXT) or a **bank/card statement PDF** (`.pdf`). Parsed in memory; **the raw file is not stored**, only normalized transactions. Both paths map the same three fields — **date, description, amount** — via shared column detection (`ingest/columns.py`, D18). Delimiter, locale (date orientation, decimal style), and column names are auto-detected for CSV; PDF uses table extraction (pdfplumber) with a line-oriented fallback and bank-specific row profiles (Capital One, Discover, Bank of America). Optional column overrides apply to both.
 
 **Request**: `multipart/form-data`
-- `file`: delimited file (required)
+- `file`: `.csv`, `.tsv`, `.txt`, or `.pdf` (required)
 - `date_column`, `description_column`, `amount_column`: column names (optional; inferred from an EN+ES vocabulary if omitted)
 - `debit_column`, `credit_column`: use instead of `amount_column` when charges/credits are in separate columns (debit → negative, credit → positive)
 - `date_format`: explicit strptime format (optional, e.g. `%d/%m/%Y`)
@@ -123,7 +123,7 @@ Uploads a **delimited** transaction export (CSV/TSV; `.csv`/`.tsv`/`.txt`). Pars
 - `decimal_style`: `auto` (default) | `us` (`1,234.56`) | `eu` (`1.234,56`)
 - `currency`: 3-letter statement currency code (optional, default `USD`)
 
-Errors: `400` if the format is unrecognized (e.g. a PDF dump), the file is empty/non-delimited, or a row cannot be parsed. Error messages never include row content.
+Errors: `400` if the format is unrecognized, the file is empty, or no rows could be mapped to date/description/amount. PDFs that contain only account summaries (no transaction table) fail cleanly. Error messages never include row content.
 
 **Response**: `201 Created`
 ```json

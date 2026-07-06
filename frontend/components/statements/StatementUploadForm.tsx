@@ -20,7 +20,7 @@ const DECIMAL_STYLES: { value: DecimalStyle; label: string }[] = [
 const CURRENCIES = ["USD", "EUR", "COP", "MXN", "GBP"] as const;
 
 /**
- * Statement CSV upload form — POST /api/statements.
+ * Statement upload form — POST /api/statements (CSV/TSV/TXT or PDF).
  * Primary path: file + currency. Advanced column/locale overrides live in
  * a <details> block (progressive disclosure, DESIGN.md §1).
  */
@@ -50,7 +50,7 @@ export function StatementUploadForm() {
     }
     if (!isAllowedStatementFile(selected)) {
       setFile(null);
-      setFileError("File must be a delimited export (.csv, .tsv, or .txt)");
+      setFileError("File must be a CSV/TSV/TXT export or a bank statement PDF");
       return;
     }
     setFile(selected);
@@ -98,7 +98,7 @@ export function StatementUploadForm() {
         <input
           id="statement-file"
           type="file"
-          accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain"
+          accept=".csv,.tsv,.txt,.pdf,text/csv,text/tab-separated-values,text/plain,application/pdf"
           className={cn(
             inputClassName,
             "file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1 file:text-sm file:font-medium file:text-brand-800",
@@ -111,8 +111,8 @@ export function StatementUploadForm() {
           <p className="text-xs text-danger">{fileError}</p>
         ) : (
           <p className="text-xs text-muted">
-            CSV, TSV, or TXT export from your bank. Your raw file is never stored — only
-            normalized transactions are saved.
+            CSV, TSV, TXT export, or PDF bank/card statement. Your raw file is never stored —
+            only normalized transactions are saved.
           </p>
         )}
         {file && !fileError && (
@@ -166,8 +166,9 @@ export function StatementUploadForm() {
           Advanced column mapping
         </summary>
         <p className="mt-2 text-xs text-muted">
-          Leave blank to auto-detect from English and Spanish column headers. Use when your
-          bank export uses non-standard names or separate debit/credit columns.
+          Leave blank to auto-detect date, description, and amount columns (English and
+          Spanish headers). Use when your export uses non-standard names or separate
+          debit/credit columns.
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field

@@ -1,12 +1,11 @@
 """Ingestion contracts — pluggable statement parsers.
 
 The API and persistence layers depend only on these abstractions, never on a
-concrete parser. New input formats (a PDF-statement-dump parser, bank-specific
-profiles) are added by implementing ``StatementParser`` and registering it in
-``registry.py`` — without touching ``api.py`` or the persistence path.
+concrete parser. New input formats (bank-specific PDF profiles) are added by
+implementing ``StatementParser`` and registering it in ``registry.py`` — without
+touching ``api.py`` or the persistence path.
 
-See docs/DECISIONS.md D15 (supported input = delimited transaction export;
-raw PDF/statement dumps are a post-MVP adapter).
+See docs/DECISIONS.md D15 (delimited exports), D18 (PDF adapter).
 """
 
 from __future__ import annotations

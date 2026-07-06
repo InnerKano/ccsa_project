@@ -239,4 +239,36 @@ These decisions extend or deviate from the defaults and directly answer question
 
 **Rationale**: keeps Layer 1 honest and explainable (Yellow zone, `AI_RULES.md`) while making the analyzer actually useful on a *single real statement*. All new coverage is **data** in `rules/vocabulary.py`; `rules/engine.py` gained only the two extra signals. `savings` stays discretionary-only (D16), so `estimated_savings ≤ monthly_recurring_total` still holds.
 
-**Scope boundary (unchanged)**: this is a realism pass on the **delimited** path (D15) — PDF/statement-dump parsing remains a future `StatementParser` adapter, not part of this change. Real samples contain **real PII**; the whole `backend/fixtures/real_samples/` tree plus `*.pdf`/`*.docx` are git-ignored (Red zone, `AI_RULES.md`). Only synthetic, PII-free fixtures under `backend/fixtures/samples/` are versioned (e.g. `caso4_capitalone_savor_multimonth.csv`, derived from real patterns, no real data).
+**Scope boundary (unchanged for D17)**: D17 was a realism pass on Layer 1 analysis. PDF ingestion landed separately in **D18**.
+
+### D18 — PDF statement ingestion adapter (shared column mapping)
+**Decision (dev branch)**: Add a second `StatementParser` for bank/card statement PDFs, registered before the delimited parser in `ingest/registry.py`. The design goal: **detect date, description, and amount columns regardless of whether the source is CSV or PDF** — format-specific code only *extracts rows*; `ingest/columns.py` maps columns and normalizes fields (same path as D15 delimited exports).
+
+**Architecture**:
+```text
+ingest/
+├── columns.py          # shared: header vocabulary, ColumnPlan, parse_tabular_rows
+├── delimited.py        # CSV/TSV → rows → columns.py
+├── pdf/
+│   ├── extract.py      # pdfplumber table + page text
+│   ├── lines.py        # line-oriented fallback + bank row profiles (CapOne, BoA, Discover)
+│   └── parser.py       # PdfStatementParser — picks best extraction strategy
+└── registry.py         # PdfStatementParser first, then DelimitedStatementParser
+```
+
+**PDF pipeline**:
+1. Extract table rows (pdfplumber) and/or line-oriented rows (page text scan with section-aware sign normalization).
+2. Score each candidate by how many valid transactions `columns.parse_tabular_rows` produces (`skip_invalid_rows=True` for PDF noise).
+3. Deduplicate bilingual/repeated pages (Capital One ES+EN).
+4. Fail cleanly when no transactions are found (e.g. Capital One 360 summary-only statements).
+
+**Dependency**: `pdfplumber` (PyPI, maintained) — justified because text-only PDF extraction is insufficient for column-collapsed layouts; table extraction requires a PDF layout library (D18, Yellow zone — verified before adding).
+
+**Alternatives considered**:
+- OCR for scanned PDFs → deferred (Won't Have in `PROJECT_SCOPE.md`; these samples are text-based).
+- One regex parser per bank in a monolith → rejected: profiles live in `pdf/lines.py` today; a future `pdf/profiles/<bank>.py` registry is the extension point when a fourth layout appears.
+- LLM PDF→JSON as primary path → deferred to Layer 2 seam (D2/D3); rules-first ingestion stays deterministic.
+
+**Validated against** (local only, git-ignored): Capital One Savor card, Discover It, Bank of America checking, Capital One 360 (correctly rejected). Real samples never committed (`real_samples/`, `*.pdf` in `.gitignore`).
+
+**API/frontend**: `POST /api/statements` and upload UI accept `.pdf`; advanced column mapping applies to both CSV and PDF.

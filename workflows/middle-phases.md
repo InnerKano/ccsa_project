@@ -24,8 +24,9 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] A1 — Auth (register/login, JWT, `users` migration, `get_current_user`) — **committed**
 - [x] A2 — Statements (CSV upload + persistence) — **committed**
 - [x] A2.1 — Ingestion hardening (modular parser: formats/locales/encoding, EN+ES, US/EU, debit-credit) — **committed**
+- [~] A2.2 — PDF ingestion adapter (shared `columns.py`, pdfplumber + line profiles, `.pdf` upload) — **implemented on `dev`, see D18; pending your audit/commit**
 - [x] A3 — Analysis L1 (rules: recurrence + categorization + savings + persistence) — **committed**
-- [~] A3.1 — Analyzer realism pass (dev): merchant-noise stripping, expanded EN+ES vocabulary from real US statements, single-statement subscription signals (bank `RECURRING` marker → `monthly`; known service → `suspected`), synthetic `caso4` fixture — **implemented on `dev`, see D17; PDF ingestion still deferred**
+- [~] A3.1 — Analyzer realism pass (dev): merchant-noise stripping, expanded EN+ES vocabulary, single-statement subscription signals, synthetic `caso4` fixture — **implemented on `dev`, see D17; pending your audit/commit**
 - [ ] A4 — Frontend vertical slice (login → upload → results dashboard) — **implemented, pending your audit of A4.6 docs / final Phase A sign-off**
   - [x] **A4.1** — Foundations + CORS (design system, API client, auth context, Compose npm sync) — **committed**
   - [x] **A4.2** — Auth screens on design system + protected routes + app shell — **committed**
