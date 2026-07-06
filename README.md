@@ -16,13 +16,13 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 ## Stack
 
 - **Backend:** FastAPI + PostgreSQL + SQLAlchemy + Alembic (JWT auth)
-- **Frontend:** Next.js + Tailwind CSS
+- **Frontend:** Next.js + Tailwind CSS + React Context + SWR — see [`frontend/DESIGN.md`](./frontend/DESIGN.md) and [`frontend/README.md`](./frontend/README.md)
 - **AI:** provider-agnostic (Ollama local / OpenAI) configurable via `.env`
 - **Infra:** Docker Compose (local); Vercel (frontend) + Railway/Render (backend)
 
 ## Project status
 
-Bootstrap (Steps 1–5) and backend Phase A (A1–A3) are complete. Frontend vertical slice **A4** is in progress by sub-phase — see [`workflows/middle-phases.md`](./workflows/middle-phases.md).
+Bootstrap (Steps 1–5) and **Phase A** (A1–A4.5) are implemented — backend + full browser flow on Layer 1 only (no LLM). See [`workflows/middle-phases.md`](./workflows/middle-phases.md).
 
 | # | Delivery | Status |
 |---|---|---|
@@ -30,15 +30,27 @@ Bootstrap (Steps 1–5) and backend Phase A (A1–A3) are complete. Frontend ver
 | A2 | Statements (CSV upload) | ✅ Done |
 | A2.1 | Ingestion hardening (formats/locales, EN+ES, US/EU) | ✅ Done |
 | A3 | Analysis (Layer 1, rules) | ✅ Done |
-| A4.1 | Frontend foundations + CORS (design system, API client, auth context) | ✅ Done |
-| A4.2 | Auth screens on design system + protected routes | ⬜ Pending audit |
-| A4.3 | Upload screen | ⬜ Pending audit |
-| A4.4 | Dashboard hub (list + run analysis) | ⬜ Pending audit |
-| A4.5 | Results breakdown (`/analysis/[id]`) | ⬜ Pending audit |
-| A4.6 | Docs closeout | ⬜ Pending |
+| A4.1 | Frontend foundations + CORS | ✅ Done |
+| A4.2 | Auth screens + protected routes | ✅ Done |
+| A4.3 | Upload screen | ✅ Done |
+| A4.4 | Dashboard hub (list + run analysis) | ✅ Done |
+| A4.5 | Results breakdown (`/analysis/[id]`) | ✅ Done |
+| A4.6 | Docs closeout | ⬜ Pending audit |
 | A5 | Sample CSV fixtures (US + LatAm, synthetic) | ✅ Done (with A2/A2.1) |
 
-**Manual verification** (any feature / sub-phase): `docker compose up --build` → http://localhost:3000 → exercise the happy path. Details and the frontend `node_modules` volume sync rule: [`workflows/implement-feature.md`](./workflows/implement-feature.md) Step 6.
+**Manual verification:** `docker compose up --build` → http://localhost:3000. Details: [`workflows/implement-feature.md`](./workflows/implement-feature.md) Step 6.
+
+## Phase A happy path (browser, no LLM)
+
+With Compose running:
+
+1. Open http://localhost:3000 → **Register** (or log in).
+2. **Upload** → select `backend/fixtures/sample.csv` → submit.
+3. **Dashboard** → confirm the statement → **Run analysis**.
+4. **Results** → verify subscriptions (NETFLIX, SPOTIFY, AMAZON PRIME), recommendations, and savings totals.
+5. **Sign out** → **Sign in** → **View results** on the same statement (saved analysis, D6).
+
+Expected from `sample.csv` (rules-only): ~**$41.47/mo** recurring, ~**$26.48** estimated savings (`backend` integration tests).
 
 ## Quickstart (Docker Compose)
 
@@ -155,6 +167,7 @@ See [Deployment Guide](./docs/DEPLOYMENT.md) — Vercel (frontend) + Railway/Ren
 - [Data Model](./docs/DATA_MODEL.md) — schema, PII classification, retention, and responsible data handling
 - [Decisions](./docs/DECISIONS.md) — technical decisions and trade-offs
 - [API Reference](./docs/API.md) — endpoints
+- [Frontend Design System](./frontend/DESIGN.md) — UI/UX tokens and component rules
 - [AI Rules](./docs/AI_RULES.md) · [AI Log](./docs/AI_LOG.md) — responsible AI usage and logging
 
 ## Workflows

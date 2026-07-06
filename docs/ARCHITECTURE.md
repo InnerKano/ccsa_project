@@ -58,40 +58,38 @@ Each application owns its implementation, configuration, and documentation withi
 
 **Next.js** for a solid developer experience. Styling with **Tailwind CSS** (v4, CSS-first tokens in `app/globals.css`). For state and data fetching, a lightweight approach using **React Context + SWR** is sufficient for upload and dashboard flows.
 
-### Frontend layout (as built in A4.1+)
+### Frontend layout (built — Phase A4)
 
 ```text
 frontend/
+├── DESIGN.md                # UI/UX source of truth (tokens, components, states)
 ├── app/
-│   ├── globals.css          # Tailwind @theme tokens (brand, surfaces, semantic colors)
+│   ├── globals.css          # Tailwind @theme tokens
 │   ├── layout.tsx           # root shell + Providers
-│   ├── providers.tsx        # SWRConfig (fetcher = apiFetch) + AuthProvider
+│   ├── providers.tsx        # SWRConfig + AuthProvider
 │   ├── page.tsx             # landing (auth-aware)
-│   ├── login/               # auth screens (A4.2 migrates to design system)
+│   ├── login/               # register / login (AuthLayout)
 │   ├── register/
-│   ├── dashboard/           # A4.4 — statement list + run analysis
-│   ├── upload/              # A4.3 — CSV upload
-│   └── analysis/[id]/       # A4.5 — results dashboard
+│   ├── dashboard/           # statement list + run analysis
+│   ├── upload/              # CSV upload
+│   └── analysis/[id]/       # results breakdown
 ├── components/
-│   ├── auth/                # RequireAuth, GuestOnly (client-side route guards)
+│   ├── auth/                # RequireAuth, GuestOnly
 │   ├── layout/              # AppShell, AuthLayout
-│   └── ui/                  # reusable primitives (Button, Field, Card, Alert, Spinner)
+│   ├── ui/                  # Button, Field, Card, Alert, Spinner, …
+│   ├── statements/          # StatementUploadForm
+│   ├── dashboard/           # StatementCard, StatementList
+│   └── analysis/            # AnalysisDetailView, SubscriptionList, RecommendationList, …
 └── lib/
-    ├── api/
-    │   ├── client.ts        # apiFetch + ApiError (Bearer, JSON/FormData)
-    │   ├── auth.ts          # register/login API
-    │   ├── statements.ts    # A4.3+
-    │   └── analysis.ts      # A4.4+
-    ├── auth/
-    │   ├── session.ts       # token persistence (localStorage — single seam)
-    │   └── context.tsx      # AuthProvider / useAuth
-    ├── cn.ts                # className helper
-    └── format.ts            # currency/date display (Decimal strings from API)
+    ├── api/                 # client.ts, auth.ts, statements.ts, analysis.ts
+    ├── auth/                # session.ts, context.tsx
+    ├── cn.ts
+    └── format.ts
 ```
 
 **Rules:** screens compose primitives and call `lib/api/<feature>.ts`; they do not call `fetch` directly. New backend features get a matching `lib/api/` module. JWT is attached by `apiFetch`, not passed manually per call.
 
-**Visual/UX consistency:** the design tokens, component usage, and interaction conventions are defined in [`frontend/DESIGN.md`](../frontend/DESIGN.md) — the source of truth for how the UI looks and behaves. Every new screen or component follows it so the product stays consistent as it scales.
+**Visual/UX consistency:** the design tokens, component usage, and interaction conventions are defined in [`frontend/DESIGN.md`](../frontend/DESIGN.md). Entry point for frontend developers: [`frontend/README.md`](../frontend/README.md).
 
 **Local Compose note:** `node_modules` for the frontend lives in a named Docker volume (`frontend_node_modules`). The compose service runs `npm install && npm run dev` on startup so dependency changes in `package.json` sync without a manual reinstall — see `implement-feature.md` Step 6.
 

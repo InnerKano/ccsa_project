@@ -25,14 +25,14 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] A2 — Statements (CSV upload + persistence) — **committed**
 - [x] A2.1 — Ingestion hardening (modular parser: formats/locales/encoding, EN+ES, US/EU, debit-credit) — **committed**
 - [x] A3 — Analysis L1 (rules: recurrence + categorization + savings + persistence) — **committed**
-- [ ] A4 — Frontend vertical slice (login → upload → results dashboard)
+- [ ] A4 — Frontend vertical slice (login → upload → results dashboard) — **implemented, pending your audit of A4.6 docs / final Phase A sign-off**
   - [x] **A4.1** — Foundations + CORS (design system, API client, auth context, Compose npm sync) — **committed**
-  - [ ] **A4.2** — Auth screens on design system + protected routes + app shell — **implemented, pending your audit/commit**
-  - [ ] **A4.3** — Upload screen (`POST /api/statements`) — **implemented, pending your audit/commit**
-  - [ ] **A4.4** — Dashboard hub (`/dashboard` — list statements, run analysis) — **implemented, pending your audit/commit**
-  - [ ] **A4.5** — Results screen (`/analysis/[id]` — subscriptions, totals, recommendations) — **implemented, pending your audit/commit**
-  - [ ] **A4.6** — Docs closeout (remaining items only — several aligned with A4.1: `middle-phases.md`, `implement-feature.md` Step 5/6/8, `API.md` CORS, `ARCHITECTURE.md` frontend layout, root `README.md`, `AI_LOG.md`, `frontend/*/README.md`)
-- [ ] A5 — Sample CSV (done alongside A2 — synthetic `sample.csv` / `sample_es.csv`)
+  - [x] **A4.2** — Auth screens on design system + protected routes + app shell — **committed**
+  - [x] **A4.3** — Upload screen (`POST /api/statements`) — **committed**
+  - [x] **A4.4** — Dashboard hub (`/dashboard` — list statements, run analysis) — **committed**
+  - [x] **A4.5** — Results screen (`/analysis/[id]` — subscriptions, totals, recommendations) — **committed**
+  - [ ] **A4.6** — Docs closeout (`middle-phases.md`, `implement-feature.md`, `ARCHITECTURE.md`, `README.md`, `frontend/README.md`, `frontend/DESIGN.md` cross-links) — **implemented, pending your audit/commit**
+- [x] A5 — Sample CSV (synthetic `sample.csv` / `sample_es.csv`, shipped with A2/A2.1)
 - [ ] Should Have (LLM, category summaries)
 - [ ] Deploy + video
 
@@ -79,15 +79,16 @@ One `implement-feature.md` cycle per delivery (A1–A3 backend; **A4 is split in
 | A4.2 | Auth UX | `app/login`, `app/register`, `app/page`, protected-route guard, app shell/header | Login/register on the design system; signed-in users reach `/dashboard` |
 | A4.3 | Upload | `lib/api/statements.ts`, `app/upload` | CSV upload → `201` + redirect to dashboard |
 | A4.4 | Dashboard | `lib/api/analysis.ts`, `app/dashboard` | List statements; run `POST /api/analysis/{statement_id}`; link to latest result |
-| A4.5 | Results | `app/analysis/[id]` | Render `detected_subscriptions`, `monthly_recurring_total`, `estimated_savings`, `recommendations` |
+| A4.5 | Results | `app/analysis/[id]`, `components/analysis/` | Render `detected_subscriptions`, `monthly_recurring_total`, `estimated_savings`, `recommendations` |
+| A4.6 | Docs closeout | `workflows/`, `README.md`, `ARCHITECTURE.md`, `frontend/README.md` | Workflows and READMEs reflect how A4 was actually built; `DESIGN.md` linked as UI source of truth |
 
-Commit convention for A4: **one commit per sub-phase** (e.g. `Add frontend foundations and CORS (A4.1)`), same imperative style as backend deliveries.
+Commit convention for A4: **one commit per sub-phase** (e.g. `Add frontend foundations and CORS (A4.1)`), same imperative style as backend deliveries. A4.6 is docs-only.
 
 **A2.1 — ingestion hardening (inserted between A2 and A3).** After A2 shipped a working upload against an idealized CSV, real bank exports (see `backend/fixtures/` real samples) showed the contract was too optimistic: different delimiters, languages (EN/ES), date orientations, decimal styles (US `1,234.56` vs LatAm `1.234,56`), sign conventions, and encodings. A2.1 refactors parsing into a **pluggable pipeline** (`modules/statements/ingest/`) that handles delimited exports robustly and leaves PDF/statement-dump parsing as a future adapter (D15). This is a scoped realism pass, not scope creep — it keeps the MVP usable by real users without chasing per-bank PDF parsing.
 
 Touch points:
 - Backend: `modules/<feature>/`, `core/models.py`, `main.py` (router registration), `API.md`
-- Frontend: routes under `app/`, client in `lib/api/`, minimal components
+- Frontend: routes under `app/`, client in `lib/api/`, feature components in `components/<feature>/`, primitives in `components/ui/`, visual rules in `frontend/DESIGN.md`
 - DB: migration ships **with** the model (auth brings the first one)
 
 Commit convention: one commit per feature, with an imperative summary matching the repo history (`Add auth module ...`, `Add statements module ...`) — no `feat(scope):` prefix.
@@ -151,6 +152,6 @@ Notes specific to this stretch:
 
 ## Next step
 
-**A4.6 — docs closeout** (remaining workflow/README alignment), after A4.5 is audited and committed. A4.5 shipped: full `/analysis/[id]` breakdown — `AnalysisDetailView`, `SubscriptionList`, `RecommendationList`, statement currency via `getStatement`, empty states per DESIGN.md. **Phase A success criterion** (register → upload → see subscriptions + savings → return later) is met end-to-end in the browser once A4.5 is committed.
+**Phase A browser MVP is complete** (A1–A4.5 committed). Finish **A4.6 docs closeout** audit/commit, then record a first video draft (`finish-project.md`) or start **Phase B** (LLM Layer 2) if time allows. Deploy smoke test (B3) can run in parallel with Phase B planning.
 
-Remaining A4 sub-phases close the Phase A success criterion: upload → dashboard → results (register → upload → see subscriptions + savings → return later). LLM work (Phase B) starts only once Phase A meets that criterion.
+**Phase A verification** (browser, no LLM): register → upload `backend/fixtures/sample.csv` → dashboard → run analysis → view subscriptions + savings on `/analysis/{id}` → sign out → sign in → view results again. See `README.md` § Phase A happy path and `implement-feature.md` Step 6.

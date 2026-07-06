@@ -31,4 +31,4 @@ components/
 - No business logic or API calls here — only props in, JSX out.
 - New shared patterns (e.g. a data table for subscriptions) land here or in `components/<feature>/` once a second screen needs them.
 
-Design tokens, variants, and interaction conventions: **[`frontend/DESIGN.md`](../DESIGN.md)** (source of truth). Structure: `docs/ARCHITECTURE.md` § Frontend layout.
+Design tokens, variants, and interaction conventions: **[`frontend/DESIGN.md`](../DESIGN.md)** (source of truth). Structure: [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) § Frontend layout · [`frontend/README.md`](../README.md)

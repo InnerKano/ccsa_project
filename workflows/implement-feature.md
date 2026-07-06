@@ -131,12 +131,16 @@ Frontend code follows `ARCHITECTURE.md`: **Next.js App Router**, **Tailwind CSS*
 **Layering (do not bypass):**
 
 ```
-app/<route>/page.tsx     → screen composition (calls hooks + API modules)
-lib/api/<feature>.ts     → typed calls built on apiFetch (one module per backend feature)
-lib/api/client.ts        → apiFetch + ApiError (Bearer token, JSON/FormData, {detail} errors)
-lib/auth/session.ts      → token read/write (single persistence seam)
-lib/auth/context.tsx     → AuthProvider / useAuth (UI session state)
-components/ui/           → reusable primitives (Button, Field, Card, Alert, …)
+app/<route>/page.tsx              → thin route shell (RequireAuth + AppShell + feature view)
+components/<feature>/             → feature UI (StatementUploadForm, StatementList, AnalysisDetailView, …)
+components/layout/ + auth/        → AppShell, AuthLayout, RequireAuth, GuestOnly
+components/ui/                    → reusable primitives (Button, Field, Card, Alert, …)
+lib/api/<feature>.ts              → typed calls built on apiFetch (one module per backend feature)
+lib/api/client.ts                 → apiFetch + ApiError (Bearer token, JSON/FormData, {detail} errors)
+lib/auth/session.ts               → token read/write (single persistence seam)
+lib/auth/context.tsx              → AuthProvider / useAuth (UI session state)
+lib/format.ts                     → formatCurrency / formatDate (Decimal strings from API)
+frontend/DESIGN.md                → visual/UX source of truth (read before any new screen)
 ```
 
 **Typed API call** (feature modules use the shared client — not raw `fetch` with a manual token):
@@ -161,14 +165,29 @@ export function uploadStatement(file: File, currency = "USD"): Promise<Statement
 }
 ```
 
-**SWR read** (default fetcher is wired in `app/providers.tsx`):
+**SWR reads** — use a **named cache key** plus an explicit fetcher from `lib/api/` (dashboard pattern):
 
 ```typescript
 import useSWR from "swr";
-const { data, error, isLoading } = useSWR<StatementSummary[]>("/api/statements");
+import { listStatements } from "@/lib/api/statements";
+
+const { data, error, isLoading, mutate } = useSWR("statements", listStatements);
 ```
 
-**A4 sub-phases:** when the delivery is the full frontend vertical slice, ship it as **A4.1 → A4.5** (see `middle-phases.md`) — one commit per sub-phase, each leaving something verifiable in the browser. A4.1 lays foundations (CORS, design system, API/auth layer); A4.2–A4.5 add routes.
+The default fetcher in `app/providers.tsx` is `(path) => apiFetch(path)` — suitable when the key is an API path (e.g. `useSWR("/api/analysis", () => apiFetch("/api/analysis"))`). Prefer named keys (`"statements"`, `"analyses"`, `analysis-${id}`) when the fetcher is a typed helper. Invalidate with `mutate("statements")` after uploads or writes.
+
+**A4 sub-phases:** the full frontend vertical slice ships as **A4.1 → A4.6** (see `middle-phases.md`) — one commit per sub-phase, each leaving something verifiable in the browser. Mapping:
+
+| Sub | Delivers |
+|---|---|
+| A4.1 | CORS, Tailwind tokens, `components/ui/`, `apiFetch`, `AuthProvider`, Compose `npm install` on frontend startup |
+| A4.2 | Login/register/landing, `RequireAuth`/`GuestOnly`, `AppShell` |
+| A4.3 | `lib/api/statements.ts`, `/upload` |
+| A4.4 | `lib/api/analysis.ts`, `/dashboard` (list + run analysis) |
+| A4.5 | `/analysis/[id]` full breakdown (`components/analysis/`) |
+| A4.6 | Docs closeout — workflows/READMEs aligned with reality |
+
+**Frontend-only features** (no new backend module): skip Steps 2–4. Start at Step 1 (contract in `API.md` already exists), then Step 5, Step 6, Step 8. Example: A4.3–A4.5.
 
 **Money on the wire:** backend serializes `Decimal` fields as JSON strings (`API.md`). Parse with `Number()` only at display time via `lib/format.ts` — never use JS `float` for calculations in the UI.
 
@@ -195,6 +214,17 @@ docker compose restart frontend   # next dev caches module resolution; restart t
 A `500` with `Cannot find module '<pkg>'` in the frontend logs is always this: the container's
 volume is behind `package.json`. It is never fixed by editing code.
 
+**Phase A browser happy path** (after A4 — full MVP, no LLM): with Compose running at http://localhost:3000:
+
+1. Register a new account (or log in).
+2. **Upload** → choose `backend/fixtures/sample.csv` → submit.
+3. **Dashboard** → confirm the statement appears → **Run analysis**.
+4. **Results** (`/analysis/{id}`) → confirm subscriptions (e.g. NETFLIX, SPOTIFY, AMAZON PRIME), recommendations, and savings totals.
+5. **Sign out** → **Sign in** → **Dashboard** → **View results** on the same statement (persistence, D6).
+6. Optional DB check: `docker compose exec db psql -U postgres -d ccsa -c "SELECT id FROM analyses LIMIT 3;"`
+
+Layer 2 (LLM) is not required for this path (`ai_enabled: false` in the MVP).
+
 ## Step 7: Quick quality pass
 
 ```bash
@@ -209,6 +239,7 @@ Do not block the feature on minor warnings — prioritize working and tested cod
 - Update `docs/API.md` with the new endpoint (same format: no envelope, standard status codes). For A4.1-style cross-cutting changes, document CORS in `API.md` instead of inventing a new doc.
 - If AI contributed something non-trivial (Yellow/Red), add a line to `docs/AI_LOG.md` — see format in `AI_RULES.md`.
 - Update `workflows/middle-phases.md` Status (and sub-phase checkboxes for A4) when a delivery lands.
+- **Frontend changes:** follow [`frontend/DESIGN.md`](../frontend/DESIGN.md); update it if the design language changes. Keep `frontend/lib/README.md` and `frontend/components/README.md` accurate when adding API modules or component folders.
 
 ## Step 9: Commit
 
@@ -224,12 +255,13 @@ git commit -m "Add statements module (CSV upload + parse endpoint)"
 ## Checklist
 
 - [ ] Data model and API contract defined before coding
-- [ ] Migration created, reviewed by hand, applied
+- [ ] Migration created, reviewed by hand, applied (backend features only)
 - [ ] Feature lives entirely in `modules/<feature>/` (nothing loose in flat folders)
-- [ ] At least one test covers the happy path
-- [ ] End-to-end flow tested manually
-- [ ] `API.md` updated
+- [ ] At least one test covers the happy path (backend); frontend: manual Phase A path or sub-phase path
+- [ ] End-to-end flow tested manually (`docker compose up --build` → browser)
+- [ ] `API.md` updated (backend); `frontend/DESIGN.md` followed (frontend)
 - [ ] `AI_LOG.md` updated if applicable
+- [ ] `middle-phases.md` Status updated when a phased delivery lands
 - [ ] Commit with a descriptive imperative message (e.g. `Add <feature> module ...`)
 
 ## Common patterns

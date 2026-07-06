@@ -23,6 +23,6 @@ lib/
 - **One `lib/api/<feature>.ts` per backend module** — typed functions built on `apiFetch`.
 - **Never pass the JWT manually** — `apiFetch` reads it from `session.ts` when `auth: true` (default).
 - **Money:** API returns decimal strings; use `format.ts` at the display edge only.
-- **Reads:** prefer SWR with the default fetcher wired in `app/providers.tsx`.
+- **Reads:** prefer SWR with named keys and typed fetchers from `lib/api/` (e.g. `useSWR("statements", listStatements)`). Invalidate with `mutate("statements")` after writes. See `implement-feature.md` Step 5.
 
-See `workflows/implement-feature.md` Step 5 and `docs/ARCHITECTURE.md` § Frontend layout.
+See `workflows/implement-feature.md` Step 5, `docs/ARCHITECTURE.md` § Frontend layout, and [`frontend/README.md`](../README.md).

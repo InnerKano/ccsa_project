@@ -118,7 +118,19 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 
 ---
 
-## 5. Composition patterns (`components/layout/`, `components/auth/`)
+## 5. Composition patterns (`components/layout/`, `components/auth/`, feature folders)
+
+### App routes (Phase A)
+
+| Route | Shell | Feature components |
+|---|---|---|
+| `/` | Landing header | — (CTAs only) |
+| `/login`, `/register` | `AuthLayout` | forms with `Field` / `Button` / `Alert` |
+| `/dashboard` | `AppShell` + `RequireAuth` | `StatementList`, `StatementCard` |
+| `/upload` | `AppShell` + `RequireAuth` | `StatementUploadForm` |
+| `/analysis/[id]` | `AppShell` + `RequireAuth` | `AnalysisDetailView` → `SubscriptionList`, `RecommendationList` |
+
+### Layout & guards
 
 - **`AuthLayout`** — centered card shell for `login`/`register`: brand bar, title/subtitle, `Card` body, optional footer link. Use for any unauthenticated, single-task screen.
 - **`AppShell`** — authenticated chrome: brand, `NAV_ITEMS` nav with active state, Sign out. Add new authenticated destinations by extending `NAV_ITEMS` in one place — never re-implement the header per screen.
