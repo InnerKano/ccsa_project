@@ -73,6 +73,8 @@ frontend/
 │   ├── upload/              # A4.3 — CSV upload
 │   └── analysis/[id]/       # A4.5 — results dashboard
 ├── components/
+│   ├── auth/                # RequireAuth, GuestOnly (client-side route guards)
+│   ├── layout/              # AppShell, AuthLayout
 │   └── ui/                  # reusable primitives (Button, Field, Card, Alert, Spinner)
 └── lib/
     ├── api/

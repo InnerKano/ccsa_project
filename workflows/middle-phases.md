@@ -27,7 +27,7 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] A3 — Analysis L1 (rules: recurrence + categorization + savings + persistence) — **committed**
 - [ ] A4 — Frontend vertical slice (login → upload → results dashboard)
   - [x] **A4.1** — Foundations + CORS (design system, API client, auth context, Compose npm sync) — **committed**
-  - [ ] **A4.2** — Auth screens on design system + protected routes + app shell
+  - [ ] **A4.2** — Auth screens on design system + protected routes + app shell — **implemented, pending your audit/commit**
   - [ ] **A4.3** — Upload screen (`POST /api/statements`)
   - [ ] **A4.4** — Dashboard hub (`/dashboard` — list statements, run analysis)
   - [ ] **A4.5** — Results screen (`/analysis/[id]` — subscriptions, totals, recommendations)
@@ -151,6 +151,6 @@ Notes specific to this stretch:
 
 ## Next step
 
-**A4.2 — auth screens on the design system** (`app/login`, `app/register`, protected routes, app shell), after A4.1 is audited. A4.1 shipped: CORS allow-list (`CORS_ORIGINS`), Tailwind v4 tokens, `components/ui/` primitives, shared `apiFetch` client, `AuthProvider` + SWR, and Compose `npm install` on frontend startup so `docker compose up --build` stays the honest manual verification path (`implement-feature.md` Step 6).
+**A4.3 — upload screen** (`lib/api/statements.ts`, `app/upload`), after A4.2 is audited and committed. A4.2 shipped: login/register on the design system (`AuthLayout`, `Field`, `Alert`), `GuestOnly` / `RequireAuth` guards, `AppShell` with sign-out, landing page, and protected `/dashboard` hub.
 
 Remaining A4 sub-phases close the Phase A success criterion: upload → dashboard → results (register → upload → see subscriptions + savings → return later). LLM work (Phase B) starts only once Phase A meets that criterion.

@@ -5,13 +5,14 @@ Reusable, presentation-only building blocks. Feature screens in `app/` compose t
 ## Layout
 
 ```text
-components/ui/
-├── Alert.tsx       # inline status (error / info / success)
-├── Button.tsx      # variants + loading state; export buttonClass for Link-as-button
-├── Card.tsx        # Card, CardHeader, CardContent, CardTitle
-├── Input.tsx       # Input + Field (label, hint, error)
-├── Spinner.tsx
-└── index.ts        # barrel export
+components/
+├── auth/
+│   ├── RequireAuth.tsx   # redirect to /login when unauthenticated
+│   └── GuestOnly.tsx     # redirect to /dashboard when already signed in
+├── layout/
+│   ├── AppShell.tsx      # authenticated header + nav + main
+│   └── AuthLayout.tsx    # centered card shell for login/register
+└── ui/                   # primitives (Button, Field, Card, …)
 ```
 
 ## Rules

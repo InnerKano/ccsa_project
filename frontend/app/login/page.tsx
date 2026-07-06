@@ -4,10 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-import { login, saveToken } from "@/lib/api/auth";
+import { GuestOnly } from "@/components/auth/GuestOnly";
+import { AuthLayout } from "@/components/layout/AuthLayout";
+import { Alert, Button, Field } from "@/components/ui";
+import { useAuth } from "@/lib/auth/context";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +22,8 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const { token } = await login(email, password);
-      saveToken(token);
-      router.push("/");
+      await login(email, password);
+      router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -29,42 +32,45 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ maxWidth: 400, margin: "2rem auto", padding: "0 1rem" }}>
-      <h1>Log in</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="email">Email</label>
-          <br />
-          <input
+    <GuestOnly>
+      <AuthLayout
+        title="Welcome back"
+        subtitle="Sign in to review your statements and savings."
+        footer={
+          <>
+            No account?{" "}
+            <Link href="/register" className="font-medium text-brand-700 hover:text-brand-800">
+              Create one
+            </Link>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Field
+            label="Email"
             id="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: "100%", padding: "0.5rem" }}
           />
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="password">Password</label>
-          <br />
-          <input
+          <Field
+            label="Password"
             id="password"
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            style={{ width: "100%", padding: "0.5rem" }}
           />
-        </div>
-        {error && <p style={{ color: "crimson" }}>{error}</p>}
-        <button type="submit" disabled={loading} style={{ padding: "0.5rem 1rem" }}>
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
-      <p style={{ marginTop: "1rem" }}>
-        No account? <Link href="/register">Register</Link>
-      </p>
-    </main>
+          {error && <Alert variant="error">{error}</Alert>}
+          <Button type="submit" className="w-full" loading={loading}>
+            Sign in
+          </Button>
+        </form>
+      </AuthLayout>
+    </GuestOnly>
   );
 }

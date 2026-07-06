@@ -4,10 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-import { register, saveToken } from "@/lib/api/auth";
+import { GuestOnly } from "@/components/auth/GuestOnly";
+import { AuthLayout } from "@/components/layout/AuthLayout";
+import { Alert, Button, Field } from "@/components/ui";
+import { useAuth } from "@/lib/auth/context";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +22,8 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      const { token } = await register(email, password);
-      saveToken(token);
-      router.push("/");
+      await register(email, password);
+      router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -29,42 +32,46 @@ export default function RegisterPage() {
   }
 
   return (
-    <main style={{ maxWidth: 400, margin: "2rem auto", padding: "0 1rem" }}>
-      <h1>Create account</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="email">Email</label>
-          <br />
-          <input
+    <GuestOnly>
+      <AuthLayout
+        title="Create your account"
+        subtitle="Upload a statement and see where your recurring money goes."
+        footer={
+          <>
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium text-brand-700 hover:text-brand-800">
+              Sign in
+            </Link>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Field
+            label="Email"
             id="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: "100%", padding: "0.5rem" }}
           />
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="password">Password (min 8 characters)</label>
-          <br />
-          <input
+          <Field
+            label="Password"
             id="password"
             type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            style={{ width: "100%", padding: "0.5rem" }}
+            hint="At least 8 characters"
           />
-        </div>
-        {error && <p style={{ color: "crimson" }}>{error}</p>}
-        <button type="submit" disabled={loading} style={{ padding: "0.5rem 1rem" }}>
-          {loading ? "Creating…" : "Register"}
-        </button>
-      </form>
-      <p style={{ marginTop: "1rem" }}>
-        Already have an account? <Link href="/login">Log in</Link>
-      </p>
-    </main>
+          {error && <Alert variant="error">{error}</Alert>}
+          <Button type="submit" className="w-full" loading={loading}>
+            Create account
+          </Button>
+        </form>
+      </AuthLayout>
+    </GuestOnly>
   );
 }
