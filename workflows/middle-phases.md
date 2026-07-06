@@ -29,7 +29,7 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
   - [x] **A4.1** — Foundations + CORS (design system, API client, auth context, Compose npm sync) — **committed**
   - [ ] **A4.2** — Auth screens on design system + protected routes + app shell — **implemented, pending your audit/commit**
   - [ ] **A4.3** — Upload screen (`POST /api/statements`) — **implemented, pending your audit/commit**
-  - [ ] **A4.4** — Dashboard hub (`/dashboard` — list statements, run analysis)
+  - [ ] **A4.4** — Dashboard hub (`/dashboard` — list statements, run analysis) — **implemented, pending your audit/commit**
   - [ ] **A4.5** — Results screen (`/analysis/[id]` — subscriptions, totals, recommendations)
   - [ ] **A4.6** — Docs closeout (remaining items only — several aligned with A4.1: `middle-phases.md`, `implement-feature.md` Step 5/6/8, `API.md` CORS, `ARCHITECTURE.md` frontend layout, root `README.md`, `AI_LOG.md`, `frontend/*/README.md`)
 - [ ] A5 — Sample CSV (done alongside A2 — synthetic `sample.csv` / `sample_es.csv`)
@@ -151,6 +151,6 @@ Notes specific to this stretch:
 
 ## Next step
 
-**A4.4 — dashboard hub** (`lib/api/analysis.ts`, `app/dashboard` statement list + run analysis), after A4.3 is audited and committed. A4.3 shipped: `lib/api/statements.ts`, `/upload` with `StatementUploadForm` (file + currency + progressive-disclosure column mapping), nav link in `AppShell`, redirect to `/dashboard?uploaded=&count=` on success.
+**A4.5 — results screen** (`app/analysis/[id]` — full subscription breakdown + recommendations), after A4.4 is audited and committed. A4.4 shipped: `lib/api/analysis.ts`, dashboard statement list (SWR), run/re-run analysis, link to latest result; `/analysis/[id]` shows headline KPIs (A4.5 extends with full breakdown).
 
 Remaining A4 sub-phases close the Phase A success criterion: upload → dashboard → results (register → upload → see subscriptions + savings → return later). LLM work (Phase B) starts only once Phase A meets that criterion.

@@ -3,34 +3,44 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { mutate } from "swr";
 
+import { StatementList } from "@/components/dashboard/StatementList";
 import { Alert, buttonClass, Card, CardContent, CardTitle } from "@/components/ui";
 
 /**
- * Dashboard hub — A4.4 adds statement list + run analysis.
- * A4.3 adds upload success feedback via ?uploaded=&count= query params.
+ * Dashboard hub — lists statements, runs analysis, links to saved results.
  */
 export function DashboardContent() {
   const searchParams = useSearchParams();
   const uploadedId = searchParams.get("uploaded");
   const transactionCount = searchParams.get("count");
 
-  const [showSuccess, setShowSuccess] = useState(Boolean(uploadedId));
+  const [showUploadSuccess, setShowUploadSuccess] = useState(Boolean(uploadedId));
 
   useEffect(() => {
-    setShowSuccess(Boolean(uploadedId));
+    setShowUploadSuccess(Boolean(uploadedId));
+    if (uploadedId) {
+      void mutate("statements");
+      void mutate("analyses");
+    }
   }, [uploadedId]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="mt-1 text-muted">
-          Your statements and savings analysis will appear here.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+          <p className="mt-1 text-muted">
+            Your uploaded statements and savings analyses.
+          </p>
+        </div>
+        <Link href="/upload" className={`${buttonClass("primary")} inline-flex shrink-0`}>
+          Upload statement
+        </Link>
       </div>
 
-      {showSuccess && uploadedId && (
+      {showUploadSuccess && uploadedId && (
         <Alert variant="success">
           Statement uploaded successfully
           {transactionCount
@@ -39,24 +49,14 @@ export function DashboardContent() {
           <button
             type="button"
             className="ml-2 text-sm font-medium underline"
-            onClick={() => setShowSuccess(false)}
+            onClick={() => setShowUploadSuccess(false)}
           >
             Dismiss
           </button>
         </Alert>
       )}
 
-      <Card>
-        <CardContent>
-          <CardTitle>Get started</CardTitle>
-          <p className="mt-2 text-sm text-muted">
-            Upload a CSV statement to start detecting subscriptions and estimated savings.
-          </p>
-          <Link href="/upload" className={`${buttonClass("primary")} mt-4 inline-flex`}>
-            Upload statement
-          </Link>
-        </CardContent>
-      </Card>
+      <StatementList />
     </div>
   );
 }
