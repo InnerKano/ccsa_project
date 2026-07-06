@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 
+import "./globals.css";
+import { Providers } from "./providers";
+
 export const metadata: Metadata = {
-  title: "CCSA",
-  description: "Credit Card Savings Analyzer",
+  title: "CCSA — Credit Card Savings Analyzer",
+  description:
+    "Upload a card statement and see recurring charges, subscriptions, and estimated savings.",
 };
 
 export default function RootLayout({
@@ -12,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="min-h-dvh bg-background text-foreground antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

@@ -24,8 +24,14 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] A1 — Auth (register/login, JWT, `users` migration, `get_current_user`) — **committed**
 - [x] A2 — Statements (CSV upload + persistence) — **committed**
 - [x] A2.1 — Ingestion hardening (modular parser: formats/locales/encoding, EN+ES, US/EU, debit-credit) — **committed**
-- [ ] A3 — Analysis L1 (rules: recurrence + categorization + savings + persistence) — **implemented, pending your audit/commit**
-- [ ] A4 — Frontend vertical slice (login → upload → results)
+- [x] A3 — Analysis L1 (rules: recurrence + categorization + savings + persistence) — **committed**
+- [ ] A4 — Frontend vertical slice (login → upload → results dashboard)
+  - [x] **A4.1** — Foundations + CORS (design system, API client, auth context, Compose npm sync) — **committed**
+  - [ ] **A4.2** — Auth screens on design system + protected routes + app shell
+  - [ ] **A4.3** — Upload screen (`POST /api/statements`)
+  - [ ] **A4.4** — Dashboard hub (`/dashboard` — list statements, run analysis)
+  - [ ] **A4.5** — Results screen (`/analysis/[id]` — subscriptions, totals, recommendations)
+  - [ ] **A4.6** — Docs closeout (remaining items only — several aligned with A4.1: `middle-phases.md`, `implement-feature.md` Step 5/6/8, `API.md` CORS, `ARCHITECTURE.md` frontend layout, root `README.md`, `AI_LOG.md`, `frontend/*/README.md`)
 - [ ] A5 — Sample CSV (done alongside A2 — synthetic `sample.csv` / `sample_es.csv`)
 - [ ] Should Have (LLM, category summaries)
 - [ ] Deploy + video
@@ -60,10 +66,22 @@ Each delivery must leave something usable in the browser or via `curl`.
 | A1 | Auth | `modules/auth/` | Identity + isolation | register/login, JWT, first migration (`users`) |
 | A2 | Statements | `modules/statements/` | Product input | CSV upload → transactions persisted |
 | A3 | Analysis L1 | `modules/analysis/` | Core of the product | rules → subscriptions + savings + persistence |
-| A4 | Frontend vertical slice | `frontend/app/`, `lib/api/` | End-to-end demo | login → upload → results dashboard |
+| A4 | Frontend vertical slice | `frontend/app/`, `frontend/lib/`, `frontend/components/` | End-to-end demo | login → upload → dashboard → results (see A4 sub-phases below) |
 | A5 | Sample CSV | `backend/fixtures/` (or similar) | Mitigates risk #1 (format inconsistency) | testable without real data |
 
-One `implement-feature.md` cycle per delivery (A1–A3 backend; A4 integrated frontend; A5 rides along with A2).
+One `implement-feature.md` cycle per delivery (A1–A3 backend; **A4 is split into sub-phases A4.1–A4.5** because the frontend slice is large enough to audit incrementally; A5 rides along with A2).
+
+**A4 — frontend vertical slice (sub-phases).** A4 is not a single throwaway UI pass: it follows the stack in `ARCHITECTURE.md` (Next.js + Tailwind CSS + React Context + SWR) and is delivered in auditable slices. Each sub-phase should leave something verifiable at http://localhost:3000 via `docker compose up --build` (see `implement-feature.md` Step 6).
+
+| Sub | Scope | Touch points | Visible result |
+|---|---|---|---|
+| A4.1 | Foundations + CORS | `core/config.py` + `main.py` (CORS allow-list), `frontend/app/globals.css`, `frontend/lib/api/client.ts`, `frontend/lib/auth/`, `frontend/components/ui/`, `docker-compose.yml` (`npm install` on frontend startup) | Browser can call the API from `localhost:3000`; design tokens + UI primitives + shared API/auth layer compile |
+| A4.2 | Auth UX | `app/login`, `app/register`, `app/page`, protected-route guard, app shell/header | Login/register on the design system; signed-in users reach `/dashboard` |
+| A4.3 | Upload | `lib/api/statements.ts`, `app/upload` | CSV upload → `201` + redirect to dashboard |
+| A4.4 | Dashboard | `lib/api/analysis.ts`, `app/dashboard` | List statements; run `POST /api/analysis/{statement_id}`; link to latest result |
+| A4.5 | Results | `app/analysis/[id]` | Render `detected_subscriptions`, `monthly_recurring_total`, `estimated_savings`, `recommendations` |
+
+Commit convention for A4: **one commit per sub-phase** (e.g. `Add frontend foundations and CORS (A4.1)`), same imperative style as backend deliveries.
 
 **A2.1 — ingestion hardening (inserted between A2 and A3).** After A2 shipped a working upload against an idealized CSV, real bank exports (see `backend/fixtures/` real samples) showed the contract was too optimistic: different delimiters, languages (EN/ES), date orientations, decimal styles (US `1,234.56` vs LatAm `1.234,56`), sign conventions, and encodings. A2.1 refactors parsing into a **pluggable pipeline** (`modules/statements/ingest/`) that handles delimited exports robustly and leaves PDF/statement-dump parsing as a future adapter (D15). This is a scoped realism pass, not scope creep — it keeps the MVP usable by real users without chasing per-bank PDF parsing.
 
@@ -84,7 +102,7 @@ Starts only once Phase A is stable and time allows.
 |---|---|---|
 | B1 | `shared/llm/` + Layer 2 | AI enrichment with fallback (D2) |
 | B2 | Category summaries | Richer UI |
-| B3 | CORS + deploy smoke test | Public demo (`DEPLOYMENT.md`) |
+| B3 | Deploy smoke test | Public demo (`DEPLOYMENT.md`) — CORS allow-list is wired in A4.1; production adds the Vercel origin to `CORS_ORIGINS` |
 
 Constraint: `LLM_ENABLED=false` must keep producing the same result as the end of Phase A.
 
@@ -110,16 +128,16 @@ Plan (API.md + DATA_MODEL.md)
 ```
 
 Notes specific to this stretch:
-- A1 (auth): backend first; a minimal login form ships in the same cycle or immediately after — JWT gets verified before A4.
-- A3 (analysis): the densest delivery; no LLM mixed in here — rules only (`REQUIREMENTS.md` §6).
-- A4: two screens (upload + results) satisfy the Must Have; UI polish is not a goal at this stage.
+- A1 (auth): backend first; a minimal login form shipped in the same cycle — JWT verified before A4.
+- A3 (analysis): the densest backend delivery; no LLM mixed in — rules only (`REQUIREMENTS.md` §6).
+- A4: delivered as **A4.1–A4.5** (see table above). Stack matches `ARCHITECTURE.md` (Tailwind + Context + SWR). MVP goal is a working end-to-end flow, not pixel-perfect polish — but the foundation is modular so later UI work extends `components/ui/` and `lib/api/` rather than rewriting screens.
 
 ## Cross-cutting concerns (live inside features, not as separate deliveries)
 
 | Concern | When | Where |
 |---|---|---|
 | JWT + password hashing (bcrypt) | A1 | `core/security.py` or `modules/auth/services.py` |
-| CORS | A4 (frontend calls the API) | `main.py` / `core/config` |
+| CORS | A4.1 (browser calls API) | `main.py` / `core/config` — `CORS_ORIGINS` comma-separated allow-list, never `*` |
 | `get_current_user` dependency | A1 | reused in statements/analysis |
 | Per-user scoping in queries | A2, A3 | each module's `services.py` |
 | Synthetic sample CSV | A2 or A5 | no real PII |
@@ -127,13 +145,12 @@ Notes specific to this stretch:
 ## Explicit exclusions for this stretch
 
 - No new `docs/PHASES.md` — ordering lives in `PROJECT_SCOPE.md` + this workflow
-- No Tailwind/CSS polish before the flow works end-to-end
 - Plaid, PDF parsing, multi-currency (Won't/Could Have — see `PROJECT_SCOPE.md`)
 - Microservices, RBAC, caching (`PROJECT_SCOPE.md` secondary list)
 - Infra refactors unless something breaks Compose or tests
 
 ## Next step
 
-**A4 — frontend vertical slice** (`frontend/app/` + `lib/api/`), via `implement-feature.md`, after A3 is audited and committed. Two screens satisfy the Must Have: an upload screen (calls `POST /api/statements`) and a results screen (calls `POST /api/analysis/{statement_id}` then renders detected subscriptions, `monthly_recurring_total`, `estimated_savings`, and recommendations). This closes the Phase A success criterion end-to-end (register → upload → see subscriptions + savings → return later). CORS is wired here (`main.py` / `core/config`, no `*` in prod). UI polish is not a goal yet.
+**A4.2 — auth screens on the design system** (`app/login`, `app/register`, protected routes, app shell), after A4.1 is audited. A4.1 shipped: CORS allow-list (`CORS_ORIGINS`), Tailwind v4 tokens, `components/ui/` primitives, shared `apiFetch` client, `AuthProvider` + SWR, and Compose `npm install` on frontend startup so `docker compose up --build` stays the honest manual verification path (`implement-feature.md` Step 6).
 
-A3 shipped bilingual (EN + ES) merchant/category rules as required, rules-only (`ai_enabled=false`), with a documented Layer 2 seam (D2, D16). LLM work (Phase B) starts only once Phase A meets the success criterion. Documentation updates during this stretch are limited to `API.md`, `AI_LOG.md`, and `DECISIONS.md` (only for non-obvious changes), plus this workflow's own Status and per-module `README.md` stubs when a module goes from planned to built — no new narrative docs beyond this one.
+Remaining A4 sub-phases close the Phase A success criterion: upload → dashboard → results (register → upload → see subscriptions + savings → return later). LLM work (Phase B) starts only once Phase A meets that criterion.

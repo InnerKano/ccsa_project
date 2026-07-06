@@ -22,18 +22,20 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 
 ## Project status
 
-Bootstrap (Steps 1–5) and Phase A1 are complete. See [`workflows/middle-phases.md`](./workflows/middle-phases.md) for the full delivery plan and current phase boundaries.
+Bootstrap (Steps 1–5) and backend Phase A (A1–A3) are complete. Frontend vertical slice **A4** is in progress by sub-phase — see [`workflows/middle-phases.md`](./workflows/middle-phases.md).
 
 | # | Delivery | Status |
 |---|---|---|
 | A1 | Auth (register/login, JWT) | ✅ Done |
-| A2 | Statements (CSV upload) | ✅ Done — pending audit |
-| A2.1 | Ingestion hardening (formats/locales, EN+ES, US/EU) | ✅ Done — pending audit |
-| A3 | Analysis (Layer 1, rules) | ⬜ Next |
-| A4 | Frontend vertical slice + CORS | ⬜ Pending |
+| A2 | Statements (CSV upload) | ✅ Done |
+| A2.1 | Ingestion hardening (formats/locales, EN+ES, US/EU) | ✅ Done |
+| A3 | Analysis (Layer 1, rules) | ✅ Done |
+| A4.1 | Frontend foundations + CORS (design system, API client, auth context) | ✅ Done |
+| A4.2 | Auth screens on design system + protected routes | ⬜ Next |
+| A4.3–A4.5 | Upload, dashboard, results | ⬜ Pending |
 | A5 | Sample CSV fixtures (US + LatAm, synthetic) | ✅ Done (with A2/A2.1) |
 
-> CORS is intentionally not configured yet — it ships with A4. Until then, `localhost:3000` can render the auth screens but browser requests to the API will be blocked; use `curl` or Swagger to exercise endpoints manually (see "Trying it out manually" below).
+**Manual verification** (any feature / sub-phase): `docker compose up --build` → http://localhost:3000 → exercise the happy path. Details and the frontend `node_modules` volume sync rule: [`workflows/implement-feature.md`](./workflows/implement-feature.md) Step 6.
 
 ## Quickstart (Docker Compose)
 
@@ -59,7 +61,7 @@ docker compose exec db pg_isready -U postgres -d ccsa
 Apply migrations:
 
 ```powershell
-docker compose exec backend alembic current        # a2_statements_001 after A2
+docker compose exec backend alembic current        # a3_analysis_001 after A3
 docker compose exec backend alembic upgrade head   # apply any pending migrations
 ```
 
@@ -73,7 +75,7 @@ This one command covers both API tests (in-process `TestClient`, no Postgres req
 
 ## Trying it out manually
 
-With Compose running, exercise the current API directly (works over `curl`/Swagger; browser flow arrives with CORS in A4):
+With Compose running, exercise the API from the browser (CORS allow-list includes `http://localhost:3000` since A4.1) or via `curl`/Swagger:
 
 ```powershell
 # Register

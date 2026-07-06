@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+/**
+ * Auth API calls (register / login). Token persistence lives in
+ * `lib/auth/session.ts`; session/UI state lives in `lib/auth/context.tsx`.
+ * These functions are transport-only and reuse the shared `apiFetch` client.
+ */
+import { apiFetch } from "@/lib/api/client";
 
 export type RegisterResult = {
   id: string;
@@ -10,54 +15,27 @@ export type LoginResult = {
   token: string;
 };
 
-async function parseError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === "string") return body.detail;
-    return "Request failed";
-  } catch {
-    return "Request failed";
-  }
-}
-
-export async function register(
-  email: string,
-  password: string,
-): Promise<RegisterResult> {
-  const res = await fetch(`${API_URL}/api/auth/register`, {
+export function register(email: string, password: string): Promise<RegisterResult> {
+  return apiFetch<RegisterResult>("/api/auth/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: { email, password },
+    auth: false,
   });
-  if (!res.ok) throw new Error(await parseError(res));
-  return res.json();
 }
 
-export async function login(email: string, password: string): Promise<LoginResult> {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
+export function login(email: string, password: string): Promise<LoginResult> {
+  return apiFetch<LoginResult>("/api/auth/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: { email, password },
+    auth: false,
   });
-  if (!res.ok) throw new Error(await parseError(res));
-  return res.json();
 }
 
-export const TOKEN_STORAGE_KEY = "ccsa_token";
-
-export function saveToken(token: string): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
-  }
-}
-
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
-}
-
-export function clearToken(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-  }
-}
+// Re-exported for backwards compatibility with existing imports; the canonical
+// home for these is `lib/auth/session.ts`.
+export {
+  TOKEN_STORAGE_KEY,
+  getToken,
+  saveToken,
+  clearToken,
+} from "@/lib/auth/session";

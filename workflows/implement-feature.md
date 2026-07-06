@@ -124,31 +124,79 @@ Integration tests under `app/modules/<feature>/tests/` require Postgres with mig
 
 ## Step 5: Frontend
 
+Frontend code follows `ARCHITECTURE.md`: **Next.js App Router**, **Tailwind CSS** (v4, tokens in `app/globals.css`), **React Context** for session state, **SWR** for authenticated reads. Transport stays in `lib/api/`; UI primitives in `components/ui/`; feature screens in `app/`.
+
+**Layering (do not bypass):**
+
+```
+app/<route>/page.tsx     → screen composition (calls hooks + API modules)
+lib/api/<feature>.ts     → typed calls built on apiFetch (one module per backend feature)
+lib/api/client.ts        → apiFetch + ApiError (Bearer token, JSON/FormData, {detail} errors)
+lib/auth/session.ts      → token read/write (single persistence seam)
+lib/auth/context.tsx     → AuthProvider / useAuth (UI session state)
+components/ui/           → reusable primitives (Button, Field, Card, Alert, …)
+```
+
+**Typed API call** (feature modules use the shared client — not raw `fetch` with a manual token):
+
 ```typescript
 // frontend/lib/api/statements.ts
-export async function uploadStatement(file: File, token: string) {
+import { apiFetch } from "@/lib/api/client";
+
+export type StatementSummary = {
+  id: string;
+  filename: string;
+  currency: string;
+  transaction_count: number;
+  uploaded_at: string;
+};
+
+export function uploadStatement(file: File, currency = "USD"): Promise<StatementSummary> {
   const form = new FormData();
-  form.append('file', file);
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/statements`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: form,
-  });
-  if (!res.ok) throw new Error((await res.json()).detail);
-  return res.json();
+  form.append("file", file);
+  form.append("currency", currency);
+  return apiFetch<StatementSummary>("/api/statements", { method: "POST", body: form });
 }
 ```
 
+**SWR read** (default fetcher is wired in `app/providers.tsx`):
+
+```typescript
+import useSWR from "swr";
+const { data, error, isLoading } = useSWR<StatementSummary[]>("/api/statements");
+```
+
+**A4 sub-phases:** when the delivery is the full frontend vertical slice, ship it as **A4.1 → A4.5** (see `middle-phases.md`) — one commit per sub-phase, each leaving something verifiable in the browser. A4.1 lays foundations (CORS, design system, API/auth layer); A4.2–A4.5 add routes.
+
+**Money on the wire:** backend serializes `Decimal` fields as JSON strings (`API.md`). Parse with `Number()` only at display time via `lib/format.ts` — never use JS `float` for calculations in the UI.
+
 ## Step 6: Test end-to-end
 
-1. `docker-compose up`
-2. Use the feature from http://localhost:3000
-3. Verify in DB: `docker-compose exec db psql -U postgres -d ccsa`
+The canonical manual check for any feature (the "did this commit actually work?" pass):
+
+1. Rebuild and start the stack from the repo root: `docker compose up --build`.
+2. Open the feature at http://localhost:3000 and exercise the happy path in the browser.
+3. Verify persistence in the DB: `docker compose exec db psql -U postgres -d ccsa`.
+
+**Frontend dependency changes** (new `npm` package in `package.json`): the frontend's
+`node_modules` lives in a **named volume** (`frontend_node_modules`), isolated from the host,
+so it survives `--build` and does **not** auto-refresh when `package.json` changes. The compose
+`frontend` service runs `npm install && npm run dev` on startup for exactly this reason, so
+`docker compose up --build` is enough. If the stack is already running and you just added a dep,
+sync it without a full rebuild:
+
+```bash
+docker compose exec frontend npm install
+docker compose restart frontend   # next dev caches module resolution; restart to pick it up
+```
+
+A `500` with `Cannot find module '<pkg>'` in the frontend logs is always this: the container's
+volume is behind `package.json`. It is never fixed by editing code.
 
 ## Step 7: Quick quality pass
 
 ```bash
-docker-compose exec backend black app
+docker compose exec backend black app
 cd frontend && npm run lint
 ```
 
@@ -156,8 +204,9 @@ Do not block the feature on minor warnings — prioritize working and tested cod
 
 ## Step 8: Documentation
 
-- Update `docs/API.md` with the new endpoint (same format: no envelope, standard status codes).
+- Update `docs/API.md` with the new endpoint (same format: no envelope, standard status codes). For A4.1-style cross-cutting changes, document CORS in `API.md` instead of inventing a new doc.
 - If AI contributed something non-trivial (Yellow/Red), add a line to `docs/AI_LOG.md` — see format in `AI_RULES.md`.
+- Update `workflows/middle-phases.md` Status (and sub-phase checkboxes for A4) when a delivery lands.
 
 ## Step 9: Commit
 

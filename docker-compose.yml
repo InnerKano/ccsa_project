@@ -47,6 +47,12 @@ services:
     volumes:
       - .:/workspace
       - frontend_node_modules:/workspace/frontend/node_modules
+    # node_modules lives in a named volume (isolated from the host bind-mount),
+    # so it survives `--build` and can go stale when package.json changes.
+    # Syncing on startup keeps the "rebuild → up → localhost:3000" flow honest:
+    # new deps are always present without a manual reinstall (see
+    # workflows/implement-feature.md Step 6).
+    command: sh -c "npm install && npm run dev"
 
 volumes:
   postgres_data:

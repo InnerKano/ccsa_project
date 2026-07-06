@@ -56,7 +56,40 @@ Each application owns its implementation, configuration, and documentation withi
 
 ### Frontend
 
-**Next.js** for a solid developer experience. Styling with **Tailwind CSS**. For state and data fetching, a lightweight approach using **React Context + SWR** is sufficient for upload and dashboard flows.
+**Next.js** for a solid developer experience. Styling with **Tailwind CSS** (v4, CSS-first tokens in `app/globals.css`). For state and data fetching, a lightweight approach using **React Context + SWR** is sufficient for upload and dashboard flows.
+
+### Frontend layout (as built in A4.1+)
+
+```text
+frontend/
+├── app/
+│   ├── globals.css          # Tailwind @theme tokens (brand, surfaces, semantic colors)
+│   ├── layout.tsx           # root shell + Providers
+│   ├── providers.tsx        # SWRConfig (fetcher = apiFetch) + AuthProvider
+│   ├── page.tsx             # landing (auth-aware)
+│   ├── login/               # auth screens (A4.2 migrates to design system)
+│   ├── register/
+│   ├── dashboard/           # A4.4 — statement list + run analysis
+│   ├── upload/              # A4.3 — CSV upload
+│   └── analysis/[id]/       # A4.5 — results dashboard
+├── components/
+│   └── ui/                  # reusable primitives (Button, Field, Card, Alert, Spinner)
+└── lib/
+    ├── api/
+    │   ├── client.ts        # apiFetch + ApiError (Bearer, JSON/FormData)
+    │   ├── auth.ts          # register/login API
+    │   ├── statements.ts    # A4.3+
+    │   └── analysis.ts      # A4.4+
+    ├── auth/
+    │   ├── session.ts       # token persistence (localStorage — single seam)
+    │   └── context.tsx      # AuthProvider / useAuth
+    ├── cn.ts                # className helper
+    └── format.ts            # currency/date display (Decimal strings from API)
+```
+
+**Rules:** screens compose primitives and call `lib/api/<feature>.ts`; they do not call `fetch` directly. New backend features get a matching `lib/api/` module. JWT is attached by `apiFetch`, not passed manually per call.
+
+**Local Compose note:** `node_modules` for the frontend lives in a named Docker volume (`frontend_node_modules`). The compose service runs `npm install && npm run dev` on startup so dependency changes in `package.json` sync without a manual reinstall — see `implement-feature.md` Step 6.
 
 ### Infrastructure
 
@@ -154,8 +187,8 @@ All resources are scoped to `user_id`: a user must never access another user's d
 JWT with Bearer tokens.
 
 1. User credentials are exchanged for a JWT.
-2. The frontend stores the token.
-3. The token is included in the Authorization header.
+2. The frontend stores the token in `localStorage` via `lib/auth/session.ts` (MVP; swap here if httpOnly cookies are adopted later).
+3. `apiFetch` attaches the token in the `Authorization` header on every authenticated request.
 4. The backend validates the token and returns only resources owned by the token's user.
 
 ---
@@ -168,7 +201,7 @@ Because this project handles financial data, these rules are part of the archite
 - **Do not log transactions or statement content** (neither in application logs nor in error messages).
 - **Strict per-user isolation** on every endpoint and query.
 - **Secrets out of code** (`.env` in `.gitignore`); LLM provider keys never in the repository.
-- **Explicit CORS** (no `*` in production).
+- **Explicit CORS** (no `*` in production). Development allow-list: `CORS_ORIGINS=http://localhost:3000` in `.env` (wired in A4.1 — `core/config.py` + `CORSMiddleware` in `main.py`). Production adds the deployed frontend origin (see `DEPLOYMENT.md`).
 
 ---
 

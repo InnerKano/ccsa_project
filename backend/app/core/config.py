@@ -17,5 +17,14 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 24 * 7  # 7 days
     skip_db_check: bool = False
 
+    # Comma-separated allowed origins for CORS. Never "*" — the frontend sends
+    # the JWT via Authorization, and credentialed requests forbid a wildcard
+    # origin (ARCHITECTURE.md "Sensitive data security", middle-phases A4).
+    cors_origins: str = "http://localhost:3000"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
 
 settings = Settings()

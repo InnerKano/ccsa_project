@@ -42,6 +42,19 @@ Authorization: Bearer <token>
 
 All `statements` and `analysis` endpoints require authentication and operate **only on resources owned by the token holder**.
 
+## CORS
+
+Browser requests from the Next.js app require an explicit allow-list. The backend reads `CORS_ORIGINS` (comma-separated) from the environment — default in development: `http://localhost:3000`.
+
+| Setting | Development | Production |
+|---|---|---|
+| `CORS_ORIGINS` | `http://localhost:3000` | Frontend deploy URL (e.g. `https://your-project.vercel.app`) |
+| Wildcard `*` | **Never** | **Never** |
+
+`allow_credentials` is enabled because the frontend sends the JWT via the `Authorization` header on cross-origin requests. Preflight (`OPTIONS`) is handled by FastAPI's `CORSMiddleware`.
+
+Shipped in **A4.1** (`core/config.py`, `main.py`). For deploy, set `CORS_ORIGINS` on the backend platform — see `DEPLOYMENT.md`.
+
 ## Status codes used
 
 - `200 OK` — successful read or update
