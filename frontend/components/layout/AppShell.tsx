@@ -13,7 +13,10 @@ type NavItem = {
   label: string;
 };
 
-const NAV_ITEMS: NavItem[] = [{ href: "/dashboard", label: "Dashboard" }];
+const NAV_ITEMS: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/upload", label: "Upload" },
+];
 
 type AppShellProps = {
   children: ReactNode;

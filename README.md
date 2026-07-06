@@ -32,7 +32,8 @@ Bootstrap (Steps 1–5) and backend Phase A (A1–A3) are complete. Frontend ver
 | A3 | Analysis (Layer 1, rules) | ✅ Done |
 | A4.1 | Frontend foundations + CORS (design system, API client, auth context) | ✅ Done |
 | A4.2 | Auth screens on design system + protected routes | ⬜ Pending audit |
-| A4.3–A4.5 | Upload, dashboard, results | ⬜ Pending |
+| A4.3 | Upload screen | ⬜ Pending audit |
+| A4.4–A4.5 | Dashboard, results | ⬜ Pending |
 | A5 | Sample CSV fixtures (US + LatAm, synthetic) | ✅ Done (with A2/A2.1) |
 
 **Manual verification** (any feature / sub-phase): `docker compose up --build` → http://localhost:3000 → exercise the happy path. Details and the frontend `node_modules` volume sync rule: [`workflows/implement-feature.md`](./workflows/implement-feature.md) Step 6.

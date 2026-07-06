@@ -12,6 +12,8 @@ components/
 ├── layout/
 │   ├── AppShell.tsx      # authenticated header + nav + main
 │   └── AuthLayout.tsx    # centered card shell for login/register
+├── statements/
+│   └── StatementUploadForm.tsx  # multipart upload UI (A4.3)
 └── ui/                   # primitives (Button, Field, Card, …)
 ```
 

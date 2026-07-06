@@ -5,6 +5,9 @@ import { cn } from "@/lib/cn";
 const inputBase =
   "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted transition-colors focus:border-brand-500 disabled:opacity-60";
 
+/** Shared control styles for Input, native file inputs, and selects. */
+export const inputClassName = inputBase;
+
 type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
