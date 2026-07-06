@@ -212,3 +212,17 @@ These decisions extend or deviate from the defaults and directly answer question
 **Data-handling consequence**: real bank statements contain PII/financial data. Repo fixtures are **synthetic** (`sample.csv` US, `sample_es.csv` LatAm); `.gitignore` keeps `*.csv` out by default and only whitelists those two. Real exports must never be committed (`DATA_MODEL.md` §4, `AI_RULES.md` Red zone).
 
 **Deferred to Could Have** (`PROJECT_SCOPE.md`): PDF/statement-dump parsing, per-bank format profiles, and multi-currency conversion (a `currency` per statement is stored but not converted, per REQUIREMENTS §5).
+
+### D16 — Layer 1 detection & savings rules (rules-only MVP)
+**Decision**: The A3 analysis pipeline (`modules/analysis/`) ships Layer 1 only. Its rule set is:
+- **Recurrence** — a canonical merchant (D7) charged in **≥ 2 distinct months** with a **stable amount** (spread between min and max ≤ 25% of the median) is a `detected_subscription`; cadence is labelled `monthly` in the MVP. Inflows (`amount ≥ 0`, e.g. payroll) are never subscriptions.
+- **Estimated savings** — Layer 1 has no usage signal, so it does **not** claim a subscription is unused. It recommends reviewing only **discretionary** categories (`streaming`, `music`, `gaming`, `software`, `fitness`); `estimated_savings` is their sum. Essential recurring charges (utilities, telecom, insurance, groceries, shopping…) are surfaced in `detected_subscriptions` but not recommended for cancellation. This is why `estimated_savings ≤ monthly_recurring_total`.
+- **Transaction categorization** — running an analysis fills `transactions.category` (bilingual EN+ES keyword/merchant rules, D15), so a categorized statement is visible in `GET /api/statements/{id}`. Re-running (D10) re-applies the latest run's categories.
+
+**Alternatives considered**:
+- Treat every recurring charge as savings → rejected: overstates savings and recommends cancelling essentials.
+- Infer "unused" from cadence gaps → rejected: not enough signal in a single statement; belongs to Layer 2 / month-over-month (Could Have).
+
+**Rationale**: keeps Layer 1 honest and explainable (Yellow zone, `AI_RULES.md`) and guarantees value with no AI (`REQUIREMENTS.md` §6). The bilingual vocabulary lives as data in `rules/vocabulary.py`, separate from the algorithm in `rules/engine.py`, so it can grow without touching detection logic.
+
+**Design consequence (Layer 2 seam)**: `analysis/services.py` runs `rules.engine.run_layer_one` and marks results `ai_enabled=false`, `layer_used="rules"`. A future Layer 2 wraps that result and only upgrades those flags on success — never removing the Layer 1 guarantee (D2). No LLM code is introduced now (the seam is a comment + structure, not an abstraction — per `implement-feature.md`, introduce the seam when the second variant lands).

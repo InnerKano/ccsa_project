@@ -21,10 +21,13 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] Compose + Postgres
 - [x] Alembic + `get_db`
 - [x] Structure validated (bootstrap complete)
-- [x] A1 — Auth (register/login, JWT, `users` migration, `get_current_user`) — **pending your audit/commit**
-- [ ] A2 — Statements (CSV upload + persistence) — **implemented, pending audit/commit**
-- [ ] A2.1 — Ingestion hardening (modular parser: formats/locales/encoding, EN+ES, US/EU, debit-credit) — **implemented, pending audit/commit**
-- [ ] Should Have (LLM, sample CSV, category summaries)
+- [x] A1 — Auth (register/login, JWT, `users` migration, `get_current_user`) — **committed**
+- [x] A2 — Statements (CSV upload + persistence) — **committed**
+- [x] A2.1 — Ingestion hardening (modular parser: formats/locales/encoding, EN+ES, US/EU, debit-credit) — **committed**
+- [ ] A3 — Analysis L1 (rules: recurrence + categorization + savings + persistence) — **implemented, pending your audit/commit**
+- [ ] A4 — Frontend vertical slice (login → upload → results)
+- [ ] A5 — Sample CSV (done alongside A2 — synthetic `sample.csv` / `sample_es.csv`)
+- [ ] Should Have (LLM, category summaries)
 - [ ] Deploy + video
 
 ## Success criterion (from `PROJECT_SCOPE.md`)
@@ -69,7 +72,7 @@ Touch points:
 - Frontend: routes under `app/`, client in `lib/api/`, minimal components
 - DB: migration ships **with** the model (auth brings the first one)
 
-Commit convention: one commit per feature (`feat(auth): ...`, `feat(statements): ...`).
+Commit convention: one commit per feature, with an imperative summary matching the repo history (`Add auth module ...`, `Add statements module ...`) — no `feat(scope):` prefix.
 
 **Phase A exit:** a test user completes the full flow on Layer 1 only. This is the point at which a first video draft can be recorded.
 
@@ -131,4 +134,6 @@ Notes specific to this stretch:
 
 ## Next step
 
-**A3 — analysis (Layer 1, rules)**, via `implement-feature.md`, after A2 + A2.1 are audited and committed. A3 must be **bilingual-ready** in its category/merchant rules (EN + ES keywords), since ingestion now accepts both. Then A4 in order, each with a verifiable demo. LLM work starts only once Phase A meets the success criterion. Documentation updates during this stretch are limited to `API.md`, `AI_LOG.md`, and `DECISIONS.md` (only for non-obvious changes) — no new docs beyond this one.
+**A4 — frontend vertical slice** (`frontend/app/` + `lib/api/`), via `implement-feature.md`, after A3 is audited and committed. Two screens satisfy the Must Have: an upload screen (calls `POST /api/statements`) and a results screen (calls `POST /api/analysis/{statement_id}` then renders detected subscriptions, `monthly_recurring_total`, `estimated_savings`, and recommendations). This closes the Phase A success criterion end-to-end (register → upload → see subscriptions + savings → return later). CORS is wired here (`main.py` / `core/config`, no `*` in prod). UI polish is not a goal yet.
+
+A3 shipped bilingual (EN + ES) merchant/category rules as required, rules-only (`ai_enabled=false`), with a documented Layer 2 seam (D2, D16). LLM work (Phase B) starts only once Phase A meets the success criterion. Documentation updates during this stretch are limited to `API.md`, `AI_LOG.md`, and `DECISIONS.md` (only for non-obvious changes), plus this workflow's own Status and per-module `README.md` stubs when a module goes from planned to built — no new narrative docs beyond this one.

@@ -161,9 +161,11 @@ Do not block the feature on minor warnings — prioritize working and tested cod
 
 ## Step 9: Commit
 
+One commit per feature, with a descriptive **imperative** summary (matches the repo history — no `feat(scope):` prefix):
+
 ```bash
 git add .
-git commit -m "feat(statements): add CSV upload and parse endpoint"
+git commit -m "Add statements module (CSV upload + parse endpoint)"
 ```
 
 ---
@@ -177,7 +179,7 @@ git commit -m "feat(statements): add CSV upload and parse endpoint"
 - [ ] End-to-end flow tested manually
 - [ ] `API.md` updated
 - [ ] `AI_LOG.md` updated if applicable
-- [ ] Commit with descriptive message (`feat(scope): what`)
+- [ ] Commit with a descriptive imperative message (e.g. `Add <feature> module ...`)
 
 ## Common patterns
 

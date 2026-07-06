@@ -25,8 +25,8 @@ modules/<feature>/
 
 | Module | Status | Scope reference |
 |---|---|---|
-| [auth](./auth/README.md) | **Next** | Must Have — register/login, JWT |
-| [statements](./statements/README.md) | Planned | Must Have — CSV upload & parse |
-| [analysis](./analysis/README.md) | Planned | Must Have — two-layer pipeline |
+| [auth](./auth/README.md) | Built (A1) | Must Have — register/login, JWT |
+| [statements](./statements/README.md) | Built (A2 + A2.1) | Must Have — CSV upload & parse |
+| [analysis](./analysis/README.md) | Built (A3, Layer 1) | Must Have — two-layer pipeline (Layer 2 → Phase B) |
 
 See `docs/ARCHITECTURE.md` and `docs/DATA_MODEL.md` for entity mapping.

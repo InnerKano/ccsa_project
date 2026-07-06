@@ -22,6 +22,8 @@ Lists: direct array, not `{"data": [...]}`.
 
 The HTTP status code already communicates state — `status` is not repeated inside the body.
 
+**Monetary / decimal fields are serialized as JSON strings** (e.g. `"15.49"`, `"41.47"`), not floats. Amounts are `Decimal` end-to-end (`NUMERIC(12,2)`, never `float` — `DATA_MODEL.md` §2); serializing as strings preserves exact precision. Clients parse them as decimals. The numeric examples below are illustrative of the value, not the JSON type.
+
 ## Errors
 
 Single format (FastAPI `HTTPException` default):
@@ -155,6 +157,8 @@ Deletes a statement and its derived data.
 
 #### POST /api/analysis/{statement_id}
 Runs analysis on an uploaded statement: **Layer 1 (rules)** detects recurring charges/subscriptions and estimates savings; **Layer 2 (LLM, optional)** adds finer categorization and natural-language recommendations. If Layer 2 fails or is disabled, Layer 1 results are returned with `ai_enabled: false`.
+
+In the MVP only Layer 1 is active, so `ai_enabled` is always `false` (Layer 2 arrives in Phase B — `middle-phases.md`). Detection groups transactions by canonical merchant (D7); a charge recurring in ≥ 2 months with a stable amount is a subscription. `recommendations` and `estimated_savings` cover only **discretionary** recurring categories (streaming, music, gaming, software, fitness — D16); essential recurring charges are still listed under `detected_subscriptions` but not flagged for cancellation. Re-running appends a new analysis (D10). `404` if the statement does not exist or is not owned by the caller.
 
 **Response**: `201 Created`
 ```json
