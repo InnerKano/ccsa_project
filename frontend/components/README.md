@@ -17,8 +17,8 @@ components/
 
 ## Rules
 
-- Primitives use Tailwind utility classes backed by semantic tokens in `app/globals.css` (`@theme`).
+- Primitives use Tailwind utility classes backed by semantic tokens in `app/globals.css` (`@theme`) — never hard-coded hex.
 - No business logic or API calls here — only props in, JSX out.
 - New shared patterns (e.g. a data table for subscriptions) land here or in `components/<feature>/` once a second screen needs them.
 
-See `docs/ARCHITECTURE.md` § Frontend layout.
+Design tokens, variants, and interaction conventions: **[`frontend/DESIGN.md`](../DESIGN.md)** (source of truth). Structure: `docs/ARCHITECTURE.md` § Frontend layout.

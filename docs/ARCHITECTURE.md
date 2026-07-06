@@ -91,6 +91,8 @@ frontend/
 
 **Rules:** screens compose primitives and call `lib/api/<feature>.ts`; they do not call `fetch` directly. New backend features get a matching `lib/api/` module. JWT is attached by `apiFetch`, not passed manually per call.
 
+**Visual/UX consistency:** the design tokens, component usage, and interaction conventions are defined in [`frontend/DESIGN.md`](../frontend/DESIGN.md) — the source of truth for how the UI looks and behaves. Every new screen or component follows it so the product stays consistent as it scales.
+
 **Local Compose note:** `node_modules` for the frontend lives in a named Docker volume (`frontend_node_modules`). The compose service runs `npm install && npm run dev` on startup so dependency changes in `package.json` sync without a manual reinstall — see `implement-feature.md` Step 6.
 
 ### Infrastructure

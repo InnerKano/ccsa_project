@@ -126,6 +126,8 @@ Integration tests under `app/modules/<feature>/tests/` require Postgres with mig
 
 Frontend code follows `ARCHITECTURE.md`: **Next.js App Router**, **Tailwind CSS** (v4, tokens in `app/globals.css`), **React Context** for session state, **SWR** for authenticated reads. Transport stays in `lib/api/`; UI primitives in `components/ui/`; feature screens in `app/`.
 
+**Before building any screen or component, read [`frontend/DESIGN.md`](../frontend/DESIGN.md)** — it is the source of truth for tokens, component usage, layout shells, and the required loading/empty/error states. New UI must be consistent with it; if you change the design language, update `DESIGN.md` in the same commit.
+
 **Layering (do not bypass):**
 
 ```
