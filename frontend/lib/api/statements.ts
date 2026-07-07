@@ -64,14 +64,17 @@ export function uploadStatement(
     if (value) form.append(key, value);
   }
 
-  return apiFetch<StatementSummary>("/api/statements", {
+  // Trailing slash matches the FastAPI collection route exactly. Calling
+  // "/api/statements" (no slash) triggers a 307 redirect that mobile Safari
+  // refuses to follow on this preflighted, credentialed multipart POST.
+  return apiFetch<StatementSummary>("/api/statements/", {
     method: "POST",
     body: form,
   });
 }
 
 export function listStatements(): Promise<StatementSummary[]> {
-  return apiFetch<StatementSummary[]>("/api/statements");
+  return apiFetch<StatementSummary[]>("/api/statements/");
 }
 
 export type TransactionSummary = {

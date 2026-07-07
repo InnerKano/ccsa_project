@@ -48,7 +48,8 @@ export function runAnalysis(statementId: string): Promise<AnalysisDetail> {
 }
 
 export function listAnalyses(): Promise<AnalysisSummary[]> {
-  return apiFetch<AnalysisSummary[]>("/api/analysis");
+  // Trailing slash matches the FastAPI collection route (avoids a 307 redirect).
+  return apiFetch<AnalysisSummary[]>("/api/analysis/");
 }
 
 export function getAnalysis(analysisId: string): Promise<AnalysisDetail> {
