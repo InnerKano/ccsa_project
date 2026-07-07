@@ -365,3 +365,39 @@ A profile that recognizes a document but extracts nothing (e.g. a summary-only 3
 **UX (`frontend/DESIGN.md`)**: the trash control is a **low-emphasis icon button** (muted → danger on hover, `aria-label`), kept off the primary action path so it does not add visual noise (principle 1, *trust through restraint*). Because archiving is reversible, an **Undo** affordance (a `success` alert with Undo/Dismiss) stands in for a blocking confirmation dialog — the preferred pattern for reversible destructive actions and one that needs no modal primitive (which the design system does not have yet, `DESIGN.md` §8).
 
 **Migration**: `a7_statement_archive_001` adds nullable `statements.deleted_at` + index; `downgrade()` drops both. No backfill needed — existing rows are active (`NULL`).
+
+### D23 — Password recovery via a stateless JWT bound to the password hash (no token table)
+**Decision**: Add a self-service password reset flow — `POST /api/auth/forgot-password` (request a link) and `POST /api/auth/reset-password` (consume the link + set a new password). The reset token is a **short-lived JWT** (`purpose="pwd_reset"`, `exp` = `PASSWORD_RESET_EXPIRE_MINUTES`, default 15) signed with a **per-user key derived from `SECRET_KEY` + the user's current `password_hash`** (`core/security._reset_signing_key`). No new table, no migration.
+
+**Why hash-binding (the key idea)**: because the signing key includes the current `password_hash`, the token is **single-use and self-invalidating without any server-side state**. The moment the password changes (a successful reset, or any future change), the hash changes, so every outstanding reset token for that user stops validating. The bcrypt hash also embeds a per-user salt, so a token minted for user A can never validate for user B. This genuinely leverages the existing JWT stack (matching the project's "JWT stateless" stance) instead of adding persistence.
+
+**Verification flow**: the signature can only be checked once we know the user, whose hash is part of the key. So `reset_password` reads the **unverified** `sub` claim (`read_reset_token_subject`, also asserting `purpose`), loads the user, then fully verifies signature + expiry against that user's hash (`verify_password_reset_token`). Only then is the password re-hashed and saved.
+
+**Security invariants (Red zone, `AI_RULES.md`)**:
+- **No account enumeration** — `forgot-password` always returns `200` with an identical generic message whether or not the email exists; the service returns silently for unknown emails and **swallows+logs email-transport failures** for existing ones, so a delivery error never produces a distinguishing `500` (`_FORGOT_PASSWORD_MESSAGE`). The log never contains the token/link.
+- **Single-use** — guaranteed by hash-binding (above), not a `used_at` flag.
+- **Generic failures** — `reset-password` returns `400 "Invalid or expired reset link"` for malformed, expired, tampered, or unknown-user tokens alike (never distinguishes the cause).
+- **Force re-login** — a successful reset does **not** auto-login (no access token is issued); the user is sent to `/login`. Simpler and avoids handing a session off the back of an email link.
+- **Reset reuses the D24 password policy** — the new password is validated exactly like registration.
+
+**Alternatives considered**:
+- **DB token table** (`password_reset_tokens` with `token_hash`, `expires_at`, `used_at`; the pattern from a prior project) → rejected for the MVP: adds a migration + rows to clean up + more surface, and does not "leverage JWT". Its only real advantages over hash-binding are an **audit trail** and **explicit pre-use revocation**; neither is required now. Revisit (as a `Dxx`) if reset auditing or admin-triggered invalidation becomes a requirement.
+- **Plain JWT with only a `purpose` claim** (signed with the global `SECRET_KEY`) → rejected: it is **not** single-use — an intercepted-but-unused token stays valid until expiry even after a successful reset, and it cannot be invalidated without server state. Hash-binding fixes exactly this at no extra cost.
+- **Auto-login after reset** → rejected (see "force re-login").
+
+**Email delivery**: provider-agnostic `shared/email/` (mirrors the planned `shared/llm/` seam): `base.EmailSender` → `smtp.SmtpEmailSender` (stdlib `smtplib`, **no new dependency**) / `console.ConsoleEmailSender` (dev), selected by `factory.get_email_sender()` on `EMAIL_ENABLED`. With `EMAIL_ENABLED=false` the console sender only **logs** the link so the flow is testable locally without SMTP — this deliberately logs a normally-private link and must never be the production path. Gmail needs an **App Password** (normal passwords are disabled for SMTP). New config: `EMAIL_ENABLED`, `SMTP_*`, `EMAIL_FROM`, and `FRONTEND_URL` (to build `${FRONTEND_URL}/reset-password?token=...`).
+
+**Rate limiting**: still not implemented in the MVP (`API.md`). `forgot-password` is a public, side-effecting endpoint (sends email); a per-IP/per-email limiter is the first thing to add when this is exposed publicly — documented here rather than silently added (consistent with the rate-limiting note in `API.md`).
+
+**No schema change**: `DATA_MODEL.md` `users` is unchanged; the reset token is derived state, not stored. This is why D23 ships without a migration.
+
+### D24 — Password strength policy: NIST-aligned (length + blocklist), not forced composition
+**Decision**: Strengthen password creation responsibly. Enforce a small, honest rule set aligned with **NIST SP 800-63B**: minimum length (8, `MAX_LENGTH` 128), a **blocklist** of the most common/leaked passwords and obvious app-specific guesses, rejection of a password that **contains the email local-part**, and rejection of a single repeated character. The **server is the source of truth** (`modules/auth/password_policy.py`, used by both `RegisterRequest` and `ResetPasswordRequest`); the frontend **mirrors** the exact rules in `lib/auth/passwordPolicy.ts` for live feedback only.
+
+**Why not forced composition** (upper+lower+digit+symbol): NIST and modern UX guidance find composition rules push users toward predictable patterns (`Password1!`) and hurt usability without materially improving strength. Length + a blocklist stops the passwords that actually get guessed. So composition is surfaced as a **guidance-only strength meter** (weak/fair/good/strong), never a hard gate beyond the rules above.
+
+**UX/UI (`frontend/DESIGN.md`)**: registration and reset use a `PasswordField` (show/hide toggle, composes the `Input` primitive) plus a `PasswordStrengthMeter` (4-segment bar + label, semantic status tokens with a text label so color is never the only signal, `aria-live`), and a **confirm-password** field. The strength meter is advisory; submission is gated on the shared `evaluatePassword().acceptable` (the mirror of the backend rules).
+
+**No heavy dependency**: `zxcvbn` (~800 KB) was rejected (Risk #3 — keep deps minimal); a small custom estimator + a short in-repo blocklist is enough for the MVP. If real breach-corpus checking is ever needed, integrate a k-anonymity API (e.g. HIBP range) behind the same `password_policy` seam rather than bundling a dataset.
+
+**Consistency risk (accepted)**: the blocklist and rule order are duplicated backend/frontend by design (different runtimes). They must be kept in sync intentionally when changed — both files cross-reference each other and D24.

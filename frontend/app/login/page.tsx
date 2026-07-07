@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { GuestOnly } from "@/components/auth/GuestOnly";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Alert, Button, Field } from "@/components/ui";
 import { useAuth } from "@/lib/auth/context";
@@ -64,14 +65,23 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Field
-            label="Password"
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="space-y-1.5">
+            <PasswordField
+              label="Password"
+              id="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <div className="text-right">
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-brand-700 hover:text-brand-800"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+          </div>
           {error && <Alert variant="error">{error}</Alert>}
           <Button type="submit" className="w-full" loading={loading}>
             Sign in

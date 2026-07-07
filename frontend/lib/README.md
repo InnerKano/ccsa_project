@@ -8,12 +8,13 @@ Shared utilities and API layer. Feature screens import from here — not the oth
 lib/
 ├── api/
 │   ├── client.ts      # apiFetch + ApiError — all HTTP goes through this
-│   ├── auth.ts        # register / login
+│   ├── auth.ts        # register / login / forgot-password / reset-password
 │   ├── statements.ts  # upload, list, get
 │   └── analysis.ts    # run + list + get
 ├── auth/
-│   ├── session.ts     # token read/write (localStorage — single persistence seam)
-│   └── context.tsx    # AuthProvider / useAuth
+│   ├── session.ts        # token read/write (localStorage — single persistence seam)
+│   ├── passwordPolicy.ts # NIST strength rules (D24) — mirror of backend password_policy.py
+│   └── context.tsx       # AuthProvider / useAuth
 ├── theme/
 │   ├── session.ts     # theme preference read/write (localStorage)
 │   ├── resolve.ts     # light / dark / system → resolved theme + DOM apply

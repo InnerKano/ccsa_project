@@ -85,12 +85,14 @@ Verifies the backend is running. No authentication required.
 
 ### Auth
 
-Fixed kit base — does not change between projects.
+Register / login are the fixed kit base; password recovery (D23) and the strength policy (D24) are CCSA additions.
 
 #### POST /api/auth/register
+Passwords are validated against the strength policy (D24): min 8 / max 128 chars, not a common/blocklisted password, and must not contain the email local-part. Violations return `422` (schema validation).
+
 **Request**:
 ```json
-{ "email": "user@example.com", "password": "securepassword" }
+{ "email": "user@example.com", "password": "a strong passphrase" }
 ```
 **Response**: `201 Created`
 ```json
@@ -100,12 +102,37 @@ Fixed kit base — does not change between projects.
 #### POST /api/auth/login
 **Request**:
 ```json
-{ "email": "user@example.com", "password": "securepassword" }
+{ "email": "user@example.com", "password": "a strong passphrase" }
 ```
 **Response**: `200 OK`
 ```json
 { "token": "jwt_token" }
 ```
+
+#### POST /api/auth/forgot-password
+Starts password recovery (D23). If an account exists for the email, a reset link (`${FRONTEND_URL}/reset-password?token=...`) is emailed. The token is a short-lived JWT bound to the user's current password hash (single-use, self-invalidating; no DB row). **The response is identical whether or not the email exists** — no account enumeration. In development (`EMAIL_ENABLED=false`) the link is logged to the backend console instead of sent.
+
+**Request**:
+```json
+{ "email": "user@example.com" }
+```
+**Response**: `200 OK` (always, for any well-formed email)
+```json
+{ "message": "If an account exists for that email, a password reset link has been sent." }
+```
+
+#### POST /api/auth/reset-password
+Consumes a reset token and sets a new password (validated by the D24 policy). The token is single-use by construction — succeeding invalidates it and any other outstanding token for the user. Does **not** log the user in (force re-login, D23).
+
+**Request**:
+```json
+{ "token": "reset_jwt", "password": "a new strong passphrase" }
+```
+**Response**: `200 OK`
+```json
+{ "message": "Your password has been reset. You can now sign in." }
+```
+Errors: `400 { "detail": "Invalid or expired reset link" }` for a malformed, expired, tampered, or already-used token (the cause is never distinguished). `422` if the new password fails the strength policy.
 
 ---
 
@@ -239,4 +266,4 @@ Routes are ready for `/api/v1` (see `ARCHITECTURE.md`), but remain unversioned w
 
 ## Rate limiting
 
-Not implemented in the MVP. If exposed publicly, document the decision in `DECISIONS.md` before adding it.
+Not implemented in the MVP. If exposed publicly, document the decision in `DECISIONS.md` before adding it. The highest-priority target is `POST /api/auth/forgot-password` (public + sends email) — see D23; add a per-IP/per-email limiter there first.

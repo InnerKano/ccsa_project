@@ -32,8 +32,10 @@ Types are PostgreSQL / SQLAlchemy targets. `PK` = primary key, `FK` = foreign ke
 |---|---|---|---|---|
 | `id` | UUID | no (PK) | Internal | Server-generated |
 | `email` | VARCHAR(255) | no, unique | PII | Stored **lowercase**; normalized on register/login (D8) |
-| `password_hash` | VARCHAR(255) | no | Secret | **bcrypt/argon2 only** — plaintext is never stored, returned, or logged |
+| `password_hash` | VARCHAR(255) | no | Secret | **bcrypt/argon2 only** — plaintext is never stored, returned, or logged. Also seeds the password-reset token signing key (D23), so changing it invalidates any outstanding reset link |
 | `created_at` | TIMESTAMP | no | Internal | Default `now()` |
+
+**Password recovery adds no schema (D23).** The reset token is a short-lived JWT signed with a per-user key derived from `SECRET_KEY` + the current `password_hash` — it is **derived state, not stored**. There is no `password_reset_tokens` table: single-use and invalidation come from the hash-binding (a successful reset re-hashes the password, breaking the signing key of every outstanding token). This is why the recovery feature ships without a migration. Email delivery config (`EMAIL_*`, `FRONTEND_URL`) are secrets/operational settings, not stored data.
 
 ### `statements` (module `statements`)
 

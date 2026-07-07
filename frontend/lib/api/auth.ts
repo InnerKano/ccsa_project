@@ -15,6 +15,10 @@ export type LoginResult = {
   token: string;
 };
 
+export type MessageResult = {
+  message: string;
+};
+
 export function register(email: string, password: string): Promise<RegisterResult> {
   return apiFetch<RegisterResult>("/api/auth/register", {
     method: "POST",
@@ -27,6 +31,24 @@ export function login(email: string, password: string): Promise<LoginResult> {
   return apiFetch<LoginResult>("/api/auth/login", {
     method: "POST",
     body: { email, password },
+    auth: false,
+  });
+}
+
+/** Request a reset link. The backend responds identically whether or not the
+ *  email exists (no account enumeration, D23), so the UI shows one message. */
+export function forgotPassword(email: string): Promise<MessageResult> {
+  return apiFetch<MessageResult>("/api/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+    auth: false,
+  });
+}
+
+export function resetPassword(token: string, password: string): Promise<MessageResult> {
+  return apiFetch<MessageResult>("/api/auth/reset-password", {
+    method: "POST",
+    body: { token, password },
     auth: false,
   });
 }

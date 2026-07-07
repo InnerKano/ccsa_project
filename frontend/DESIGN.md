@@ -144,6 +144,12 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 ### DonutChart
 - SVG donut for category spend breakdown. Props: `segments`, `total`, `currency`. Center shows formatted total + “TOTAL” label. Segment colors come from `var(--color-chart-N)` — never hard-coded hex. Animations respect `prefers-reduced-motion`. Used by `SpendingComparisonCard` on `/analysis/[id]`.
 
+### PasswordField (`components/auth/`)
+- Password input with a **show/hide** toggle, composing the `Input` primitive so it inherits field styling and a11y (`aria-invalid`, focus ring). The toggle is a real `<button>` with a dynamic `aria-label` ("Show password" / "Hide password"). Use it for every password entry (login, register, reset) instead of a bare `Field type="password"`.
+
+### PasswordStrengthMeter (`components/auth/`)
+- Guidance-only strength indicator (NIST-aligned, D24): a 4-segment bar colored by score with a **text label** (weak/fair/good/strong) — color is never the only signal. Uses status tokens (`danger`/`warning`/`brand-500`/`success`) and `aria-live="polite"`. It never blocks on its own; forms gate submission on `evaluatePassword().acceptable` from `lib/auth/passwordPolicy.ts` (the mirror of the backend rules). Registration/reset also include a **confirm-password** field.
+
 ### InitialAvatar
 - Circular placeholder showing an entity's initial (first alphanumeric char, upper-cased) — a SaaS pattern that anchors list rows and improves vertical scanning. Neutral by design (`bg-surface-muted`, `text-foreground`, subtle `border-border`) so it does **not** dilute the brand accent (§2.1). Decorative (`aria-hidden`) — the adjacent text names the entity for assistive tech. Used in `SubscriptionList`.
 
@@ -158,7 +164,9 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 | Route | Shell | Feature components |
 |---|---|---|
 | `/` | Landing header (logo + theme toggle) | centered SaaS hero (eyebrow → h1 → description → CTAs → trust note) |
-| `/login`, `/register` | `AuthLayout` | forms with `Field` / `Button` / `Alert` |
+| `/login`, `/register` | `AuthLayout` | forms with `Field` / `PasswordField` / `Button` / `Alert`; register adds `PasswordStrengthMeter` + confirm field (D24) |
+| `/forgot-password` | `AuthLayout` | email form → generic success `Alert` (no enumeration, D23) |
+| `/reset-password` | `AuthLayout` | `PasswordField` + strength meter + confirm; reads `token` from the query (Suspense); success → force re-login link to `/login` (D23) |
 | `/dashboard` | `AppShell` + `RequireAuth` | `StatementList`, `StatementCard` |
 | `/dashboard/archived` | `AppShell` + `RequireAuth` | `ArchivedList`, `ArchivedStatementCard` (restore / permanent delete, D22) |
 | `/upload` | `AppShell` + `RequireAuth` | `StatementUploadForm` |

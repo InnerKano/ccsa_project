@@ -7,8 +7,10 @@ Reusable, presentation-only building blocks. Feature screens in `app/` compose t
 ```text
 components/
 ├── auth/
-│   ├── RequireAuth.tsx   # redirect to /login when unauthenticated
-│   └── GuestOnly.tsx     # redirect to /dashboard when already signed in
+│   ├── RequireAuth.tsx           # redirect to /login when unauthenticated
+│   ├── GuestOnly.tsx             # redirect to /dashboard when already signed in
+│   ├── PasswordField.tsx         # password input + show/hide toggle (D24)
+│   └── PasswordStrengthMeter.tsx # guidance-only NIST strength meter (D24)
 ├── layout/
 │   ├── AppShell.tsx      # authenticated header + nav + main
 │   └── AuthLayout.tsx    # centered card shell for login/register

@@ -5,15 +5,19 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { GuestOnly } from "@/components/auth/GuestOnly";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Alert, Button, Field } from "@/components/ui";
 import { useAuth } from "@/lib/auth/context";
+import { evaluatePassword } from "@/lib/auth/passwordPolicy";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,12 +29,14 @@ export default function RegisterPage() {
       setError("Email is required");
       return;
     }
-    if (!password) {
-      setError("Password is required");
+
+    const { acceptable, issues } = evaluatePassword(password, email);
+    if (!acceptable) {
+      setError(issues[0] ?? "Please choose a stronger password");
       return;
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+    if (password !== confirm) {
+      setError("Passwords do not match");
       return;
     }
 
@@ -68,14 +74,24 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Field
-            label="Password"
-            id="password"
-            type="password"
+          <div className="space-y-2">
+            <PasswordField
+              label="Password"
+              id="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              hint="At least 8 characters. Longer passphrases are stronger."
+            />
+            <PasswordStrengthMeter password={password} email={email} />
+          </div>
+          <PasswordField
+            label="Confirm password"
+            id="confirm-password"
             autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            hint="At least 8 characters"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            error={confirm && password !== confirm ? "Passwords do not match" : undefined}
           />
           {error && <Alert variant="error">{error}</Alert>}
           <Button type="submit" className="w-full" loading={loading}>
