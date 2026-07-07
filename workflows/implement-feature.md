@@ -199,6 +199,13 @@ The canonical manual check for any feature (the "did this commit actually work?"
 2. Open the feature at http://localhost:3000 and exercise the happy path in the browser.
 3. Verify persistence in the DB: `docker compose exec db psql -U postgres -d ccsa`.
 
+**Fast iteration alternative (venv + host Node):** while building, you don't have to rebuild
+the image on every change. Run Postgres in a container and the backend/frontend on the host
+with hot reload — `docker compose up -d db`, then `uvicorn app.main:app --reload` and
+`npm run dev`. Full ordered loop (setup, migrations, tests, verification): [`workflows/local-dev.md`](./local-dev.md).
+Keep this Compose `--build` pass as the **final** verification before commit — it is the
+source of truth for "runs clean from scratch."
+
 **Frontend dependency changes** (new `npm` package in `package.json`): the frontend's
 `node_modules` lives in a **named volume** (`frontend_node_modules`), isolated from the host,
 so it survives `--build` and does **not** auto-refresh when `package.json` changes. The compose

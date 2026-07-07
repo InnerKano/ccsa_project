@@ -120,31 +120,30 @@ curl http://localhost:8000/api/statements -H "Authorization: Bearer TOKEN"
 
 You can also drive the same requests interactively from Swagger at http://localhost:8000/docs.
 
-## Appendix: alternative backend runtimes
+## Local development without full Docker (venv + host Node)
 
-Use these only when iterating on backend code **outside** Compose. Compose remains the recommended and verified path above.
+For fast day-to-day iteration you can run the backend in a Python **venv** and the frontend
+with **host Node**, keeping only Postgres in a container. Code reloads instantly and the IDE
+resolves imports. The full ordered guide (setup → run → migrations → tests → verify) is in
+[`workflows/local-dev.md`](./workflows/local-dev.md). Quick version, from the repo root:
 
 ```powershell
+cp .env.example .env            # DATABASE_URL already targets localhost:5432
+docker compose up -d db         # only Postgres in a container
+
 cd backend
-```
-
-### Option A: venv (IDE + fast iteration)
-
-The venv is local-only (`backend/venv/`, gitignored). For `/health` without Postgres, set `SKIP_DB_CHECK=true` in `.env` or export it for the session.
-
-```powershell
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000   # http://localhost:8000/health
+
+cd frontend
+npm install
+npm run dev                     # http://localhost:3000
 ```
 
-### Option B: standalone Docker image
-
-```powershell
-docker build -t ccsa-backend .
-docker run --rm -p 8000:8000 -e SKIP_DB_CHECK=true ccsa-backend
-```
+Compose remains the **canonical, verified** path for a clean-from-scratch run and final
+per-feature verification (`implement-feature.md` Step 6).
 
 ### Running tests outside Compose
 
@@ -153,6 +152,17 @@ Same suite, same result, no running server required:
 ```powershell
 cd backend
 pytest
+```
+
+Unit and API tests set `SKIP_DB_CHECK` automatically and pass without Postgres; DB-backed
+integration tests skip unless `docker compose up -d db` is running.
+
+### Standalone Docker image (backend only)
+
+```powershell
+cd backend
+docker build -t ccsa-backend .
+docker run --rm -p 8000:8000 -e SKIP_DB_CHECK=true ccsa-backend
 ```
 
 ## Deployment
@@ -175,4 +185,5 @@ See [Deployment Guide](./docs/DEPLOYMENT.md) — Vercel (frontend) + Railway/Ren
 - [Start a Project](./workflows/start-project.md)
 - [Middle Phases](./workflows/middle-phases.md) — post-bootstrap delivery plan and phase status
 - [Implement a Feature](./workflows/implement-feature.md)
+- [Local Development](./workflows/local-dev.md) — venv + host Node dev loop (fast iteration without full Docker)
 - [Finish the Project](./workflows/finish-project.md)

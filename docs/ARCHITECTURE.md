@@ -211,7 +211,7 @@ Because this project handles financial data, these rules are part of the archite
 
 Deployment choices depend on the hosting platform, available resources, cost, and the project timeline.
 
-**Development:** Docker Compose local.
+**Development:** Docker Compose local (canonical, verified). For fast day-to-day iteration, a venv + host Node loop (only Postgres in a container) is documented in [`workflows/local-dev.md`](../workflows/local-dev.md) — same code, hot reload, IDE-friendly.
 
 **Production:**
 - Frontend → Vercel

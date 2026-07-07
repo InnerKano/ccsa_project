@@ -42,7 +42,7 @@ docker compose up --build
 
 The Compose `frontend` service runs `npm install && npm run dev` so the `frontend_node_modules` volume stays in sync with `package.json`.
 
-Standalone (host Node, optional):
+Standalone (host Node — fast iteration alongside a venv backend):
 
 ```powershell
 cd frontend
@@ -50,7 +50,8 @@ npm install
 npm run dev
 ```
 
-Set `NEXT_PUBLIC_API_URL` in the repo `.env` if the API is not on `localhost:8000`.
+Set `NEXT_PUBLIC_API_URL` in the repo `.env` if the API is not on `localhost:8000`. Full
+venv + host Node dev loop (backend, migrations, tests): [`workflows/local-dev.md`](../workflows/local-dev.md).
 
 ## Phase A happy path
 
