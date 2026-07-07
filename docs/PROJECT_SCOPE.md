@@ -45,6 +45,7 @@
 - **Layer 2 (LLM):** finer categorization and natural-language recommendations, with a **provider-agnostic** setup (Ollama local / OpenAI via `.env`) and **automatic fallback to Layer 1** on failure.
 - **Example CSV** included in the repo for testing without real data.
 - **Category summaries** (streaming, services, food, etc.) with aggregated amounts.
+- **Detection of fees/commissions + savings recommendations** (overdraft, ATM, maintenance, annual… ). **Implemented — D21.** Fees are aggregated by type and counted as *hard* savings, separate from *potential* subscription savings; every recurring charge is surfaced (discretionary → cancel, essential → review). This closes the "commissions" half of the brief's problem statement.
 
 ### Could Have
 
@@ -52,7 +53,7 @@
 - **PDF parsing** of bank statements — and, related, parsing of PDF-exported-to-`.csv` statement dumps (fixed-width, multi-line, page noise). See D15: enabled by the pluggable `ingest/` design, deferred out of MVP.
 - **Per-bank format profiles** (e.g. Banco de Bogotá, Cash App) as ingestion adapters.
 - Month-over-month comparison and alerts for new subscriptions.
-- Detection of fees/charges in addition to subscriptions.
+- ~~Detection of fees/charges in addition to subscriptions.~~ **Done — moved to Should Have (D21).**
 
 Goal:
 - **Automatic subscription cancellation** (the "nice-to-have" of the brief): this requires merchant integrations, per-service OAuth, and legal/operational implications. It is recommended as future work; cancellations should be performed by the user.

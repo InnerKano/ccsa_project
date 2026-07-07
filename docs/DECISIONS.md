@@ -324,3 +324,23 @@ A profile that recognizes a document but extracts nothing (e.g. a summary-only 3
 **Honesty invariants kept (D16/D17)**: no new subscription heuristics — a single statement is still one month, so nothing is invented; the intra-month "repeated small charge" signal was **explicitly rejected** (a vending repeat is not a subscription). `GOOGLE ONE` is surfaced as `suspected`, not `monthly`. Savings stays discretionary-only, so `estimated_savings ≤ monthly_recurring_total` still holds.
 
 **Result** (local, git-ignored): 360 `other` 40 → 10, PNC `other` 21 → 16, both with clean canonical names and no over-detection. Added `test_rules.py` cases (bilingual type categorization, structural-token stripping, Google One suspected). Full suite: 100 tests green.
+
+### D21 — Fees (commissions) as savings opportunities + richer, honest recommendations
+**Decision**: Extend Layer 1 so the product covers **both** halves of the brief's problem statement ("consumers pay **subscriptions and commissions** they don't know they have") and so the results are no longer limited to a couple of discretionary subscriptions. Three changes, all in the rules layer plus one additive column:
+- **Avoidable fees.** Outflow transactions categorized as `fees` (overdraft, ATM, monthly/maintenance/annual/service fees, `comisión`…) are aggregated **by fee type** (`FEE_LABELS`, `fee_label()`) into `avoid_fee` recommendations. Unlike subscriptions, a fee needs **no recurrence** to be surfaced — any fee is money the user likely did not intend to pay. Fee totals are **hard savings**.
+- **Two savings buckets.** `estimated_savings` is now `avoidable_fees_total` (hard) + `potential_subscription_savings` (potential, discretionary subscriptions per D16). Both are **derived in the response from `recommendations.kind`**, so no `analyses` columns were added.
+- **Recommendation `kind`.** New `recommendations.kind` column: `cancel_subscription` (discretionary, counted), `avoid_fee` (fees, counted), `review_subscription` (essential recurring — utilities, telecom, insurance, shopping… — surfaced with `estimated_saving = 0`). The review kind is why the analyzer no longer returns "only the 2 discretionary subs": every recurring charge is now surfaced, priced honestly.
+
+**Alternatives considered**:
+- Fold fees into `estimated_savings` without a split → rejected: dishonest to blend "money already wasted on fees" with "money you *could* save by cancelling"; the two have different confidence and the split is exactly the product-thinking signal the brief evaluates.
+- Persist a separate `detected_fees` table (mirroring `detected_subscriptions`) → deferred: recommendations already carry the actionable fee info; a second child table + migration + UI is more surface for no MVP gain. Revisit if per-fee traceability is needed.
+- Add `avoidable_fees_total` / `potential_subscription_savings` columns to `analyses` → rejected: derivable from `recommendations.kind` at response time (DRY, one fewer migration).
+- Treat recurring fees (e.g. a monthly maintenance fee) as subscriptions → rejected: fees are transaction **types**, not services. `_NON_SUBSCRIPTION_CATEGORIES` (`fees`, `transfer`, `cash`) are now excluded from subscription detection so a recurring fee is never double-counted into `monthly_recurring_total` nor mislabelled as a cancellable subscription.
+
+**Honesty invariants kept (D16/D17/D20)**: no new subscription heuristics; a single statement is still one month. `review_subscription` claims **zero** savings (surfaced, not counted). `monthly_recurring_total` is unchanged (subscriptions only). `spending_comparison` still reflects subscriptions only (fees are not recurring category spend).
+
+**Migration**: `a6_reco_kind_001` adds `recommendations.kind` (`VARCHAR(32) NOT NULL DEFAULT 'cancel_subscription'`; the default backfills pre-D21 rows, which were all subscription cancellations).
+
+**Sample update**: `sample.csv` / `sample_es.csv` gained synthetic fees (a recurring account-maintenance fee + a one-off overdraft / `COMISION SOBREGIRO`) so the happy path demonstrates the fee capability. Expected `sample.csv` result: `$41.47` recurring, `$97.48` savings (`$26.48` subscriptions + `$71.00` fees). Docs/tests updated accordingly.
+
+**Scope note**: this promotes "Detection of fees/charges in addition to subscriptions" from Could Have to implemented (`PROJECT_SCOPE.md`). Still no automatic cancellation (D5) and still rules-only (Layer 2 LLM remains Phase B, D2).

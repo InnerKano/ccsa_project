@@ -9,7 +9,7 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 1. Users register and log in.
 2. They upload a statement in **CSV** (the raw file is not stored; only the derived transactions are saved).
 3. The system analyzes the data in **two layers**:
-   - **Layer 1 (rules, no AI):** normalizes transactions, detects recurring merchants/subscriptions, and computes estimated savings.
+   - **Layer 1 (rules, no AI):** normalizes transactions, detects recurring merchants/subscriptions **and avoidable bank/card fees (commissions)**, and computes estimated savings split into potential (cancel discretionary subscriptions) and hard (fees already paid) savings.
    - **Layer 2 (LLM, optional):** provides finer categorization and natural-language recommendations. If it fails or is disabled, the product gracefully falls back to Layer 1.
 4. Results are saved to the user's account.
 
@@ -47,10 +47,10 @@ With Compose running:
 1. Open http://localhost:3000 → **Register** (or log in).
 2. **Upload** → select `backend/fixtures/sample.csv` → submit.
 3. **Dashboard** → confirm the statement → **Run analysis**.
-4. **Results** → verify subscriptions (NETFLIX, SPOTIFY, AMAZON PRIME), recommendations, and savings totals.
+4. **Results** → verify subscriptions (NETFLIX, SPOTIFY, AMAZON PRIME), avoidable fees (overdraft + account maintenance), recommendations, and savings totals.
 5. **Sign out** → **Sign in** → **View results** on the same statement (saved analysis, D6).
 
-Expected from `sample.csv` (rules-only): ~**$41.47/mo** recurring, ~**$26.48** estimated savings (`backend` integration tests).
+Expected from `sample.csv` (rules-only): ~**$41.47/mo** recurring, **$97.48** estimated savings = **$26.48** discretionary subscriptions + **$71.00** avoidable fees (D21; `backend` integration tests).
 
 ## Quickstart (Docker Compose)
 

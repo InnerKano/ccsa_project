@@ -27,6 +27,8 @@ class RecommendationResponse(BaseModel):
     title: str
     detail: str
     estimated_saving: Decimal
+    # `cancel_subscription` | `review_subscription` | `avoid_fee` (D21).
+    kind: str
 
     model_config = {"from_attributes": True}
 
@@ -63,12 +65,40 @@ class AnalysisResponse(BaseModel):
     ai_enabled: bool
     monthly_recurring_total: Decimal
     estimated_savings: Decimal
+    # Savings split (D21): hard = avoidable fees already paid; potential =
+    # cancelling discretionary subscriptions. Derived from recommendations by
+    # `kind`, so no extra persisted columns are needed. Sum == estimated_savings.
+    avoidable_fees_total: Decimal = Decimal("0.00")
+    potential_subscription_savings: Decimal = Decimal("0.00")
     detected_subscriptions: list[DetectedSubscriptionResponse]
     recommendations: list[RecommendationResponse]
     created_at: datetime
     spending_comparison: SpendingComparisonResponse | None = None
 
     model_config = {"from_attributes": True}
+
+    @model_validator(mode="after")
+    def derive_savings_split(self) -> Self:
+        fees = sum(
+            (r.estimated_saving for r in self.recommendations if r.kind == "avoid_fee"),
+            start=Decimal("0.00"),
+        )
+        subs = sum(
+            (
+                r.estimated_saving
+                for r in self.recommendations
+                if r.kind == "cancel_subscription"
+            ),
+            start=Decimal("0.00"),
+        )
+        if self.avoidable_fees_total != fees or self.potential_subscription_savings != subs:
+            self = self.model_copy(
+                update={
+                    "avoidable_fees_total": fees,
+                    "potential_subscription_savings": subs,
+                }
+            )
+        return self
 
     @model_validator(mode="after")
     def attach_spending_comparison(self) -> Self:

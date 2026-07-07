@@ -16,11 +16,23 @@ def test_analyze_statement_detects_subscriptions(
     assert body["statement_id"] == statement_id
     assert body["ai_enabled"] is False  # rules-only in the MVP (D2)
     assert body["monthly_recurring_total"] == "41.47"
-    assert body["estimated_savings"] == "26.48"
+    # Total savings now include avoidable fees (D21): 26.48 subscriptions + 71.00 fees.
+    assert body["estimated_savings"] == "97.48"
+    assert body["potential_subscription_savings"] == "26.48"
+    assert body["avoidable_fees_total"] == "71.00"
 
     merchants = {s["merchant"] for s in body["detected_subscriptions"]}
     assert merchants == {"NETFLIX", "SPOTIFY", "AMAZON PRIME"}
-    assert len(body["recommendations"]) == 2
+
+    # 2 discretionary cancels + 1 essential review (AMAZON PRIME) + 2 fee types.
+    kinds = sorted(r["kind"] for r in body["recommendations"])
+    assert kinds == [
+        "avoid_fee",
+        "avoid_fee",
+        "cancel_subscription",
+        "cancel_subscription",
+        "review_subscription",
+    ]
 
     comparison = body["spending_comparison"]
     before = {s["category"]: s["amount"] for s in comparison["before"]}
@@ -76,6 +88,7 @@ def test_analysis_categorizes_transactions(
     categories = {tx["description"]: tx["category"] for tx in detail["transactions"]}
     assert categories["NETFLIX.COM"] == "streaming"
     assert categories["PAYROLL DEPOSIT"] == "income"
+    assert categories["OVERDRAFT FEE"] == "fees"
 
 
 def test_analyze_nonexistent_statement_returns_404(

@@ -73,6 +73,7 @@ def run_analysis_for_statement(
                 title=rec.title,
                 detail=rec.detail,
                 estimated_saving=rec.estimated_saving,
+                kind=rec.kind,
             )
         )
 

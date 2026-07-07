@@ -89,7 +89,8 @@ Types are PostgreSQL / SQLAlchemy targets. `PK` = primary key, `FK` = foreign ke
 | `analysis_id` | UUID | no (FK → `analyses.id`) | Internal | **Indexed**, `ON DELETE CASCADE` |
 | `title` | VARCHAR(255) | no | Sensitive | May reference a merchant |
 | `detail` | VARCHAR(1024) | no | Sensitive | Natural-language text; may include amounts/merchant |
-| `estimated_saving` | NUMERIC(12,2) | no | Sensitive | |
+| `estimated_saving` | NUMERIC(12,2) | no | Sensitive | `0.00` for `review_subscription` (surfaced, not counted) |
+| `kind` | VARCHAR(32) | no | Internal | D21: `cancel_subscription` \| `review_subscription` \| `avoid_fee`. App-validated (D9). `server_default='cancel_subscription'` |
 
 _No `detected_subscription_id` in MVP — link to a detected subscription lives in free text only. See §7 if structured traceability is needed later._
 

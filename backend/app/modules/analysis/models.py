@@ -91,6 +91,12 @@ class Recommendation(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     detail: Mapped[str] = mapped_column(String(1024), nullable=False)
     estimated_saving: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    # `cancel_subscription` | `review_subscription` | `avoid_fee` — app-validated
+    # vocabulary, not a DB enum (D9, D21). Lets the response split hard (fee) vs
+    # potential (subscription) savings and the UI tone each item.
+    kind: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default="cancel_subscription"
+    )
 
     analysis: Mapped["Analysis"] = relationship(
         "Analysis", back_populates="recommendations"

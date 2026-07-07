@@ -20,10 +20,16 @@ export type DetectedSubscription = {
   category: string | null;
 };
 
+export type RecommendationKind =
+  | "cancel_subscription"
+  | "review_subscription"
+  | "avoid_fee";
+
 export type Recommendation = {
   title: string;
   detail: string;
   estimated_saving: string;
+  kind: RecommendationKind;
 };
 
 export type CategorySpendSlice = {
@@ -38,6 +44,9 @@ export type SpendingComparison = {
 };
 
 export type AnalysisDetail = AnalysisSummary & {
+  // Savings split (D21): estimated_savings === avoidable_fees_total + potential_subscription_savings.
+  avoidable_fees_total: string;
+  potential_subscription_savings: string;
   detected_subscriptions: DetectedSubscription[];
   recommendations: Recommendation[];
   spending_comparison?: SpendingComparison;

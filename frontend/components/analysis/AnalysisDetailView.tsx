@@ -70,13 +70,15 @@ export function AnalysisDetailView({ analysisId }: AnalysisDetailViewProps) {
       <AnalysisSummaryCards
         monthlyRecurringTotal={analysis.monthly_recurring_total}
         estimatedSavings={analysis.estimated_savings}
+        avoidableFeesTotal={analysis.avoidable_fees_total}
+        potentialSubscriptionSavings={analysis.potential_subscription_savings}
         currency={currency}
       />
 
       {analysis.spending_comparison && (
         <SpendingComparisonCard
           comparison={analysis.spending_comparison}
-          estimatedSavings={analysis.estimated_savings}
+          estimatedSavings={analysis.potential_subscription_savings}
           currency={currency}
         />
       )}

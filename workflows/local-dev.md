@@ -166,8 +166,9 @@ docker compose exec db psql -U postgres -d ccsa -c "SELECT id FROM analyses LIMI
 
 **Phase A browser happy path** (no LLM): register → **Upload** `backend/fixtures/sample.csv` →
 **Dashboard** → **Run analysis** → **Results** (NETFLIX, SPOTIFY, AMAZON PRIME; ~$41.47/mo
-recurring, ~$26.48 estimated savings) → sign out → sign in → **View results** again (D6
-persistence). Full script: `README.md` § Phase A happy path.
+recurring, $97.48 estimated savings = $26.48 subscriptions + $71.00 avoidable fees, D21) →
+sign out → sign in → **View results** again (D6 persistence). Full script: `README.md` § Phase A
+happy path.
 
 ---
 

@@ -16,26 +16,24 @@ export function RecommendationList({
       <CardContent>
         <CardTitle>Recommendations</CardTitle>
         <p className="mt-1 text-sm text-muted">
-          Actionable ideas to reduce discretionary recurring spending.
+          Actionable ways to cut avoidable fees and recurring spending.
         </p>
 
         {recommendations.length === 0 ? (
           <p className="mt-4 text-sm text-muted">
-            No discretionary savings opportunities were flagged. Essential recurring charges may
-            still appear in the list above.
+            No savings opportunities were flagged. Essential recurring charges may still appear in
+            the list above.
           </p>
         ) : (
           <ul className="mt-4 space-y-4" role="list">
             {recommendations.map((rec) => (
               <li
-                key={`${rec.title}-${rec.estimated_saving}`}
+                key={`${rec.kind}-${rec.title}-${rec.estimated_saving}`}
                 className="rounded-lg border border-border bg-surface-muted px-4 py-3"
               >
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                   <p className="font-medium text-foreground">{rec.title}</p>
-                  <p className="shrink-0 text-sm font-semibold text-brand-700">
-                    Save {formatCurrency(rec.estimated_saving, currency)}/mo
-                  </p>
+                  <RecommendationBadge recommendation={rec} currency={currency} />
                 </div>
                 <p className="mt-2 text-sm text-muted">{rec.detail}</p>
               </li>
@@ -44,5 +42,29 @@ export function RecommendationList({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function RecommendationBadge({
+  recommendation,
+  currency,
+}: {
+  recommendation: Recommendation;
+  currency: string;
+}) {
+  if (recommendation.kind === "review_subscription") {
+    return (
+      <span className="shrink-0 rounded-full bg-surface px-2.5 py-0.5 text-xs font-medium text-muted">
+        Worth reviewing
+      </span>
+    );
+  }
+
+  const suffix = recommendation.kind === "cancel_subscription" ? "/mo" : "";
+  return (
+    <p className="shrink-0 text-sm font-semibold text-brand-700">
+      Save {formatCurrency(recommendation.estimated_saving, currency)}
+      {suffix}
+    </p>
   );
 }

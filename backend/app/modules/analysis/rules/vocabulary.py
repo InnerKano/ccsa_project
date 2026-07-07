@@ -161,6 +161,47 @@ RECURRING_MARKERS: tuple[str, ...] = (
     "SUSCRIPCIÓN",
 )
 
+# Human-readable labels for the different avoidable bank/card fees (D21). Used to
+# group `fees` transactions into one recommendation per fee type ("You paid $X in
+# overdraft fees") instead of one per raw description. Scanned in order — put the
+# more specific substrings first (e.g. "ATM FEE" before the generic fallback).
+# Matched as a substring against the upper-cased description. The keys mirror the
+# fee cues already in CATEGORY_KEYWORDS below, so any charge categorized as `fees`
+# resolves to a label here.
+FEE_LABELS: tuple[tuple[str, str], ...] = (
+    ("WIRE TRANSFER FEE", "wire transfer fees"),
+    ("WIRE FEE", "wire transfer fees"),
+    ("OVERDRAFT FEE", "overdraft fees"),
+    ("SOBREGIRO", "overdraft fees"),
+    ("NSF FEE", "NSF/returned-item fees"),
+    ("INSUFFICIENT FUNDS", "NSF/returned-item fees"),
+    ("RETURNED ITEM", "NSF/returned-item fees"),
+    ("LATE FEE", "late-payment fees"),
+    ("ATM FEE", "ATM fees"),
+    ("FOREIGN TRANSACTION FEE", "foreign transaction fees"),
+    ("CASH ADVANCE FEE", "cash advance fees"),
+    ("STOP PAYMENT", "stop-payment fees"),
+    ("ANNUAL FEE", "annual card fees"),
+    ("MAINTENANCE FEE", "account maintenance fees"),
+    ("MONTHLY FEE", "monthly account fees"),
+    ("MEMBERSHIP FEE", "membership fees"),
+    ("SERVICE FEE", "service fees"),
+    ("SVC FEE", "service fees"),
+    ("SERVICEFEE", "service fees"),
+    ("CLUB FEES", "membership/club fees"),
+)
+
+# High-confidence fee cues scanned before transfer/cash keywords (D21.1).
+# Real BOA lines use abbreviations ("SVC FEE", "SERVICEFEE") and compound names
+# ("Wire Transfer Fee") that lose to "WIRE TRANSFER" → transfer without this pass.
+# Order matters — more specific phrases first. Bare "OVERDRAFT" is omitted so
+# "OVERDRAFT PROTECTION FROM …" (an inflow) is not mis-tagged. The engine also
+# accepts a trailing FEE/FEES token via regex (e.g. "M&T Bank … WITHDRWL … FEE").
+FEE_DESCRIPTION_KEYWORDS: tuple[str, ...] = tuple(keyword for keyword, _ in FEE_LABELS)
+
+# Fallback when a charge is categorized as `fees` but matches no specific label.
+DEFAULT_FEE_LABEL = "bank fees"
+
 # Bank/processor boilerplate tokens that pollute merchant canonicalization on
 # real statements (e.g. "CHECKCARD 0524 GO CLEANERS ...", "PMNT SENT ...",
 # "SQ *COLDSTONE"). Dropped before deriving a canonical merchant name (D17).
@@ -263,10 +304,15 @@ CATEGORY_KEYWORDS: tuple[tuple[str, str], ...] = (
     ("ONLINE PMT", "transfer"),
     ("WEB PMT", "transfer"),
     ("MOBILE PAYMENT", "transfer"),
-    # transaction-type: bank fees (before cash so "ATM FEE" is a fee, not cash)
-    ("OVERDRAFT", "fees"),
+    ("OVERDRAFT PROTECTION", "transfer"),  # inflow from linked account — not a fee (D21.1)
+    # transaction-type: bank fees — also detected via FEE_DESCRIPTION_KEYWORDS in
+    # engine._is_fee() before this list runs; kept here as fallback for categorize().
+    ("WIRE TRANSFER FEE", "fees"),
+    ("OVERDRAFT FEE", "fees"),
     ("SOBREGIRO", "fees"),
     ("SERVICE FEE", "fees"),
+    ("SVC FEE", "fees"),
+    ("SERVICEFEE", "fees"),
     ("MONTHLY FEE", "fees"),
     ("MAINTENANCE FEE", "fees"),
     ("ANNUAL FEE", "fees"),

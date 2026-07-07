@@ -171,21 +171,25 @@ Deletes a statement and its derived data.
 #### POST /api/analysis/{statement_id}
 Runs analysis on an uploaded statement: **Layer 1 (rules)** detects recurring charges/subscriptions and estimates savings; **Layer 2 (LLM, optional)** adds finer categorization and natural-language recommendations. If Layer 2 fails or is disabled, Layer 1 results are returned with `ai_enabled: false`.
 
-In the MVP only Layer 1 is active, so `ai_enabled` is always `false` (Layer 2 arrives in Phase B — `middle-phases.md`). Detection groups transactions by canonical merchant (D7); a charge recurring in ≥ 2 months with a stable amount is a subscription. `recommendations` and `estimated_savings` cover only **discretionary** recurring categories (streaming, music, gaming, software, fitness — D16); essential recurring charges are still listed under `detected_subscriptions` but not flagged for cancellation. `spending_comparison` aggregates `detected_subscriptions` by category for before/after charts: **before** is current recurring spend; **after** zeros discretionary categories (same D16 rule). Category names are open-ended (D9) — new categories added to the vocabulary appear automatically without API changes. Re-running appends a new analysis (D10). `404` if the statement does not exist or is not owned by the caller.
+In the MVP only Layer 1 is active, so `ai_enabled` is always `false` (Layer 2 arrives in Phase B — `middle-phases.md`). Detection groups transactions by canonical merchant (D7); a charge recurring in ≥ 2 months with a stable amount is a subscription. `estimated_savings` is split (D21) into `potential_subscription_savings` (cancelling **discretionary** recurring categories — streaming, music, gaming, software, fitness, D16) and `avoidable_fees_total` (bank/card **fees**/commissions already paid — overdraft, ATM, maintenance, annual, etc., aggregated by fee type regardless of recurrence). `recommendations` carry a `kind`: `cancel_subscription` (discretionary, counted savings), `avoid_fee` (fees, counted savings), or `review_subscription` (essential recurring surfaced for review, `estimated_saving: 0`). Essential recurring charges are still listed under `detected_subscriptions`. `spending_comparison` aggregates `detected_subscriptions` by category for before/after charts: **before** is current recurring spend; **after** zeros discretionary categories (same D16 rule; fees are not subscriptions and do not appear here). Category names are open-ended (D9) — new categories added to the vocabulary appear automatically without API changes. Re-running appends a new analysis (D10). `404` if the statement does not exist or is not owned by the caller.
 
 **Response**: `201 Created`
 ```json
 {
   "id": "uuid",
   "statement_id": "uuid",
-  "ai_enabled": true,
-  "monthly_recurring_total": 62.97,
-  "estimated_savings": 30.98,
+  "ai_enabled": false,
+  "monthly_recurring_total": 41.47,
+  "estimated_savings": 97.48,
+  "avoidable_fees_total": 71.00,
+  "potential_subscription_savings": 26.48,
   "detected_subscriptions": [
     { "merchant": "NETFLIX", "amount": 15.49, "cadence": "monthly", "category": "streaming" }
   ],
   "recommendations": [
-    { "title": "Cancel Netflix", "detail": "No recent usage detected; you could save ~$15.49/mo.", "estimated_saving": 15.49 }
+    { "title": "Review NETFLIX subscription", "detail": "Recurring streaming charge of about 15.49 detected every month. Cancelling it would save about 15.49 per month.", "estimated_saving": 15.49, "kind": "cancel_subscription" },
+    { "title": "Avoid overdraft fees", "detail": "You paid about 35.00 in overdraft fees (once on this statement). These charges are usually avoidable...", "estimated_saving": 35.00, "kind": "avoid_fee" },
+    { "title": "Review recurring AMAZON PRIME charge", "detail": "Recurring shopping charge of about 14.99 from AMAZON PRIME. Likely essential, but worth reviewing...", "estimated_saving": 0.00, "kind": "review_subscription" }
   ],
   "spending_comparison": {
     "before": [

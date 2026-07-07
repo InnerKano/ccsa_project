@@ -56,13 +56,67 @@ def test_detects_recurring_subscriptions_and_savings() -> None:
     merchants = {s.merchant for s in result.subscriptions}
     assert merchants == {"NETFLIX", "SPOTIFY", "AMAZON PRIME"}
     assert result.monthly_recurring_total == Decimal("41.47")
-    # Only discretionary categories (streaming, music) are recommended; AMAZON
-    # PRIME is categorized shopping and surfaced but not auto-flagged (D16).
+    # Only discretionary categories (streaming, music) are counted as savings;
+    # AMAZON PRIME is categorized shopping and surfaced as a review, not a
+    # cancellation (D16). No fees here → savings == subscription savings.
     assert result.estimated_savings == Decimal("26.48")
-    assert {r.title for r in result.recommendations} == {
-        "Review NETFLIX subscription",
-        "Review SPOTIFY subscription",
+    assert result.subscription_savings == Decimal("26.48")
+    assert result.avoidable_fees == Decimal("0.00")
+
+    cancels = {r.title for r in result.recommendations if r.kind == "cancel_subscription"}
+    reviews = {r.title for r in result.recommendations if r.kind == "review_subscription"}
+    assert cancels == {"Review NETFLIX subscription", "Review SPOTIFY subscription"}
+    # Non-discretionary recurring is now surfaced for review (fixes "only 2"), D21.
+    assert reviews == {"Review recurring AMAZON PRIME charge"}
+
+
+def test_fees_are_detected_and_counted_as_hard_savings() -> None:
+    # Fees ("comisiones") are the second half of the brief's problem statement.
+    transactions = [
+        Tx(date(2026, 1, 31), "MONTHLY MAINTENANCE FEE", Decimal("-12.00")),
+        Tx(date(2026, 2, 28), "MONTHLY MAINTENANCE FEE", Decimal("-12.00")),
+        Tx(date(2026, 2, 20), "OVERDRAFT FEE", Decimal("-35.00")),
+    ]
+    result = run_layer_one(transactions)
+
+    # Fees are transaction types, not subscriptions, so they never leak into
+    # the recurring/subscription totals (D21).
+    assert result.subscriptions == []
+    assert result.monthly_recurring_total == Decimal("0.00")
+
+    fee_labels = {f.label: (f.amount, f.occurrences) for f in result.fees}
+    assert fee_labels == {
+        "account maintenance fees": (Decimal("24.00"), 2),
+        "overdraft fees": (Decimal("35.00"), 1),
     }
+    assert result.avoidable_fees == Decimal("59.00")
+    assert result.subscription_savings == Decimal("0.00")
+    assert result.estimated_savings == Decimal("59.00")
+
+    fee_recs = [r for r in result.recommendations if r.kind == "avoid_fee"]
+    assert {r.title for r in fee_recs} == {
+        "Avoid account maintenance fees",
+        "Avoid overdraft fees",
+    }
+    assert sum(r.estimated_saving for r in fee_recs) == Decimal("59.00")
+
+
+def test_savings_split_combines_fees_and_subscriptions() -> None:
+    transactions = [
+        *_monthly("NETFLIX.COM", "-15.49", [1, 2, 3]),  # discretionary → counted
+        *_monthly("AMAZON PRIME", "-14.99", [1, 2, 3]),  # shopping → review only
+        Tx(date(2026, 2, 20), "OVERDRAFT FEE", Decimal("-35.00")),  # fee → counted
+    ]
+    result = run_layer_one(transactions)
+
+    assert result.subscription_savings == Decimal("15.49")
+    assert result.avoidable_fees == Decimal("35.00")
+    assert result.estimated_savings == Decimal("50.49")
+    # AMAZON PRIME review contributes 0 to savings but is still surfaced.
+    assert any(
+        r.kind == "review_subscription" and r.estimated_saving == Decimal("0.00")
+        for r in result.recommendations
+    )
 
 
 def test_income_is_never_a_subscription() -> None:
@@ -149,6 +203,50 @@ def test_categorize_transaction_types_bilingual() -> None:
     assert categorize("Deposit from Sueldo".upper()) == "income"
     assert categorize("IClub Fees Debit".upper()) == "fees"
     assert categorize("OVERDRAFT FEE") == "fees"
+
+
+def test_categorize_boa_real_fee_lines() -> None:
+    # Patterns from the redacted BOA statement (D21.1) — were missed before.
+    assert categorize("PMNTUS SVC FEE DES:SERVICEFEE ID:1085846") == "fees"
+    assert categorize("Wire Transfer Fee") == "fees"
+    assert categorize("M&T Bank 07/10 WITHDRWL TOWSON MD FEE") == "fees"
+    # Underlying wire is not a fee — only the separate fee line is.
+    assert categorize("WIRE TYPE:WIRE OUT DATE:200622 TRN:2020062200681970") == "other"
+    # Inflow from linked account — not a fee (bare OVERDRAFT removed from fee cues).
+    assert categorize("OVERDRAFT PROTECTION FROM 4313071621145213") == "transfer"
+
+
+def test_detect_boa_fee_lines_as_hard_savings() -> None:
+    transactions = [
+        Tx(
+            date(2020, 6, 19),
+            "PMNTUS SVC FEE DES:SERVICEFEE ID:1085846 INDN:MARILYN",
+            Decimal("-1.50"),
+        ),
+        Tx(date(2020, 6, 22), "Wire Transfer Fee", Decimal("-30.00")),
+        Tx(
+            date(2020, 7, 10),
+            "M&T Bank 07/10 #000695484 WITHDRWL M&T 7601 OSLER DR TOWSON MD FEE",
+            Decimal("-2.50"),
+        ),
+    ]
+    result = run_layer_one(transactions)
+
+    assert result.avoidable_fees == Decimal("34.00")
+    assert result.estimated_savings == Decimal("34.00")
+    fee_recs = [r for r in result.recommendations if r.kind == "avoid_fee"]
+    assert len(fee_recs) == 3
+    assert {r.title for r in fee_recs} == {
+        "Avoid service fees",
+        "Avoid wire transfer fees",
+        "Avoid bank fees",
+    }
+    by_label = {f.label: f.amount for f in result.fees}
+    assert by_label == {
+        "service fees": Decimal("1.50"),
+        "wire transfer fees": Decimal("30.00"),
+        "bank fees": Decimal("2.50"),
+    }
 
 
 def test_canonical_merchant_strips_structural_tokens() -> None:
