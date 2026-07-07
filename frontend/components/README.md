@@ -22,7 +22,7 @@ components/
 │   ├── AnalysisSummaryCards.tsx
 │   ├── SubscriptionList.tsx
 │   └── RecommendationList.tsx
-└── ui/                   # primitives (Button, Field, Card, …)
+└── ui/                   # primitives (Button, Field, Card, ThemeToggle, …)
 ```
 
 ## Rules

@@ -61,6 +61,20 @@ All visual constants live as **Tailwind v4 CSS-first tokens** in [`app/globals.c
 - Money: render amounts in `foreground`. Reserve `success`/`danger` for *directional* meaning (e.g. estimated savings positive, an overspend), not for every number.
 - Status colors require a non-color cue too (icon, label) — never rely on color alone (accessibility).
 
+### 2.1.1 Dark theme
+
+Dark mode is implemented via **`[data-theme="dark"]` on `<html>`** — semantic tokens in `globals.css` are overridden; components keep using the same Tailwind utilities (`bg-surface`, `text-foreground`, etc.).
+
+| Mechanism | Location |
+|---|---|
+| Token overrides | `app/globals.css` → `[data-theme="dark"]` block |
+| Preference storage | `lib/theme/session.ts` (`ccsa_theme` in `localStorage`) |
+| React state | `lib/theme/context.tsx` (`ThemeProvider` in `app/providers.tsx`) |
+| Anti-flash | Inline `beforeInteractive` script in `app/layout.tsx` (mirrors `resolve.ts`) |
+| Toggle control | `components/ui/ThemeToggle.tsx` in `AppShell`, `AuthLayout`, landing |
+
+**Preference values:** `light` · `dark` · `system` (default — follows `prefers-color-scheme`). The header toggle sets an explicit `light` or `dark` choice. Brand tints (`brand-50`, `brand-700`, …) are also overridden in dark so nav active states and ghost buttons stay legible.
+
 ### 2.2 Typography
 
 - **Family:** system UI stack (`--font-sans`). No web-font network dependency → fast, robust in Docker/offline, native feel. `--font-mono` is available for figures/IDs if a monospace column ever helps scanning.
@@ -110,6 +124,9 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 
 ### Alert
 - Inline feedback: `error` (`role="alert"`), `info`, `success` (`role="status"`). For form/API results shown in place. Not for global toasts (see §8 recommendations).
+
+### ThemeToggle
+- Ghost button with sun/moon SVG icons. Toggles between light and dark; persists via `useTheme()`. Placed in authenticated and public headers.
 
 ### Spinner
 - Inline/standalone loading indicator; inherits `currentColor`. Used inside `Button` and for full-page auth/guard loading.
@@ -189,7 +206,6 @@ Every data-driven surface handles four states explicitly:
 
 Add these only when a phase needs them — introduce the seam when the second use appears (same rule as backend abstractions, `implement-feature.md` Step 3). All should extend tokens/components, not fork the style:
 
-- **Dark theme** — add a `[data-theme="dark"]` token block in `globals.css` overriding the semantic surface/foreground tokens; components need no change since they use tokens. Highest-leverage future addition.
 - **Data table / list primitive** — the subscriptions list (A4.5) is the first real table; extract a `Table`/`DataList` into `components/ui/` when a second view needs it.
 - **Money component** — a small `<Amount value currency />` wrapping `formatCurrency` so positive/negative styling and precision are centralized (uses `lib/format.ts`).
 - **Toast/notification system** — for global, transient feedback (`Alert` stays for inline). Keep it token-driven and accessible (`aria-live`).

@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 
 import { apiFetch } from "@/lib/api/client";
 import { AuthProvider } from "@/lib/auth/context";
+import { ThemeProvider } from "@/lib/theme/context";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -22,7 +23,9 @@ export function Providers({ children }: { children: ReactNode }) {
         shouldRetryOnError: false,
       }}
     >
-      <AuthProvider>{children}</AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </ThemeProvider>
     </SWRConfig>
   );
 }

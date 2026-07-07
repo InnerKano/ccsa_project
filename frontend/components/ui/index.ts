@@ -3,3 +3,4 @@ export { Button, buttonClass, type ButtonVariant, type ButtonSize } from "./Butt
 export { Card, CardHeader, CardContent, CardTitle } from "./Card";
 export { Field, Input, inputClassName } from "./Input";
 export { Spinner } from "./Spinner";
+export { ThemeToggle } from "./ThemeToggle";

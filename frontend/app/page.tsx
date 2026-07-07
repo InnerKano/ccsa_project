@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { buttonClass, Spinner } from "@/components/ui";
+import { buttonClass, Spinner, ThemeToggle } from "@/components/ui";
 import { useAuth } from "@/lib/auth/context";
 
 export default function HomePage() {
@@ -32,7 +32,10 @@ export default function HomePage() {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="border-b border-border bg-surface px-4 py-4">
-        <span className="text-lg font-semibold text-brand-700">CCSA</span>
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-lg font-semibold text-brand-700">CCSA</span>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="mx-auto flex max-w-2xl flex-1 flex-col justify-center px-4 py-16">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui";
+import { Button, ThemeToggle } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/lib/auth/context";
 
@@ -62,9 +62,12 @@ export function AppShell({ children }: AppShellProps) {
             })}
           </nav>
 
-          <Button type="button" variant="ghost" size="sm" onClick={handleLogout}>
-            Sign out
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <ThemeToggle />
+            <Button type="button" variant="ghost" size="sm" onClick={handleLogout}>
+              Sign out
+            </Button>
+          </div>
         </div>
       </header>
 

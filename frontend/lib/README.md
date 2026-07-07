@@ -14,6 +14,10 @@ lib/
 ├── auth/
 │   ├── session.ts     # token read/write (localStorage — single persistence seam)
 │   └── context.tsx    # AuthProvider / useAuth
+├── theme/
+│   ├── session.ts     # theme preference read/write (localStorage)
+│   ├── resolve.ts     # light / dark / system → resolved theme + DOM apply
+│   └── context.tsx    # ThemeProvider / useTheme
 ├── cn.ts              # className helper (clsx)
 └── format.ts          # formatCurrency / formatDate (Decimal strings from API)
 ```

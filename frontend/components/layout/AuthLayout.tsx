@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Card, CardContent } from "@/components/ui";
+import { Card, CardContent, ThemeToggle } from "@/components/ui";
 
 type AuthLayoutProps = {
   title: string;
@@ -15,9 +15,12 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="border-b border-border bg-surface px-4 py-4">
-        <Link href="/" className="text-lg font-semibold text-brand-700 hover:text-brand-800">
-          CCSA
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/" className="text-lg font-semibold text-brand-700 hover:text-brand-800">
+            CCSA
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="flex flex-1 items-center justify-center px-4 py-10">
