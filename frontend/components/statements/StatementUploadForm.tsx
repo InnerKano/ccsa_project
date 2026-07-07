@@ -1,15 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { Alert, Button, Field, inputClassName } from "@/components/ui";
+import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import {
   isAllowedStatementFile,
   uploadStatement,
   type DecimalStyle,
 } from "@/lib/api/statements";
+
+type UploadPhase = "idle" | "uploading" | "processing";
 
 const DECIMAL_STYLES: { value: DecimalStyle; label: string }[] = [
   { value: "auto", label: "Auto-detect" },
@@ -40,7 +44,22 @@ export function StatementUploadForm() {
   const [dateFormat, setDateFormat] = useState("");
 
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<UploadPhase>("idle");
+  const [progress, setProgress] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [interrupted, setInterrupted] = useState(false);
+
+  const busy = phase !== "idle";
+
+  // Elapsed-seconds ticker so a slow upload/parse reads as active work, not a
+  // frozen screen (mobile networks + server-side parsing can take ~20s+).
+  useEffect(() => {
+    if (!busy) return;
+    const started = Date.now();
+    setElapsed(0);
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [busy]);
 
   function handleFileChange(selected: File | null) {
     setFileError(null);
@@ -58,34 +77,51 @@ export function StatementUploadForm() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (busy) return;
     setError(null);
+    setInterrupted(false);
 
     if (!file) {
       setFileError("Choose a statement file to upload");
       return;
     }
 
-    setLoading(true);
+    setPhase("uploading");
+    setProgress(0);
+    const startedAt = Date.now();
     try {
-      const result = await uploadStatement(file, {
-        currency: currency.toUpperCase(),
-        decimal_style: decimalStyle,
-        ...(dayfirst !== "" ? { dayfirst: dayfirst === "true" } : {}),
-        ...(dateColumn.trim() ? { date_column: dateColumn.trim() } : {}),
-        ...(descriptionColumn.trim() ? { description_column: descriptionColumn.trim() } : {}),
-        ...(amountColumn.trim() ? { amount_column: amountColumn.trim() } : {}),
-        ...(debitColumn.trim() ? { debit_column: debitColumn.trim() } : {}),
-        ...(creditColumn.trim() ? { credit_column: creditColumn.trim() } : {}),
-        ...(dateFormat.trim() ? { date_format: dateFormat.trim() } : {}),
-      });
+      const result = await uploadStatement(
+        file,
+        {
+          currency: currency.toUpperCase(),
+          decimal_style: decimalStyle,
+          ...(dayfirst !== "" ? { dayfirst: dayfirst === "true" } : {}),
+          ...(dateColumn.trim() ? { date_column: dateColumn.trim() } : {}),
+          ...(descriptionColumn.trim() ? { description_column: descriptionColumn.trim() } : {}),
+          ...(amountColumn.trim() ? { amount_column: amountColumn.trim() } : {}),
+          ...(debitColumn.trim() ? { debit_column: debitColumn.trim() } : {}),
+          ...(creditColumn.trim() ? { credit_column: creditColumn.trim() } : {}),
+          ...(dateFormat.trim() ? { date_format: dateFormat.trim() } : {}),
+        },
+        {
+          onProgress: (percent) => setProgress(percent),
+          onProcessing: () => setPhase("processing"),
+        },
+      );
 
+      console.info(`[CCSA] statement upload + parse took ${Math.round((Date.now() - startedAt) / 1000)}s`);
       router.push(
         `/dashboard?uploaded=${encodeURIComponent(result.id)}&count=${result.transaction_count}`,
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setLoading(false);
+      // Status 0 = transport dropped after the file was sent — the server may
+      // have finished anyway, so steer the user to check instead of re-uploading.
+      if (err instanceof ApiError && err.status === 0) {
+        setInterrupted(true);
+      } else {
+        setError(err instanceof Error ? err.message : "Upload failed");
+      }
+      setPhase("idle");
     }
   }
 
@@ -105,6 +141,7 @@ export function StatementUploadForm() {
             fileError && "border-danger focus:border-danger",
           )}
           aria-invalid={fileError ? true : undefined}
+          disabled={busy}
           onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
         />
         {fileError ? (
@@ -132,6 +169,7 @@ export function StatementUploadForm() {
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
             className={inputClassName}
+            disabled={busy}
           >
             {CURRENCIES.map((code) => (
               <option key={code} value={code}>
@@ -151,6 +189,7 @@ export function StatementUploadForm() {
             value={decimalStyle}
             onChange={(e) => setDecimalStyle(e.target.value as DecimalStyle)}
             className={inputClassName}
+            disabled={busy}
           >
             {DECIMAL_STYLES.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -233,9 +272,56 @@ export function StatementUploadForm() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      <Button type="submit" className="w-full sm:w-auto" loading={loading} disabled={!file}>
-        Upload statement
-      </Button>
+      {interrupted && (
+        <Alert variant="info">
+          The connection dropped while uploading, but your statement may have finished processing.
+          Check your{" "}
+          <Link href="/dashboard" className="font-medium underline">
+            dashboard
+          </Link>{" "}
+          before uploading again to avoid a duplicate.
+        </Alert>
+      )}
+
+      {busy ? (
+        <div className="space-y-2" role="status" aria-live="polite">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-foreground">
+              {phase === "uploading" ? "Uploading your statement…" : "Analyzing your statement…"}
+            </span>
+            <span className="tabular-nums text-muted">
+              {phase === "uploading" ? `${progress}%` : `${elapsed}s`}
+            </span>
+          </div>
+          <div
+            className="h-2 w-full overflow-hidden rounded-full bg-surface-muted"
+            role="progressbar"
+            aria-label={phase === "uploading" ? "Upload progress" : "Analysis in progress"}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={phase === "uploading" ? progress : undefined}
+          >
+            <div
+              className={cn(
+                "h-full rounded-full bg-brand-600",
+                phase === "uploading"
+                  ? "transition-[width] duration-300 ease-out"
+                  : "w-full animate-pulse",
+              )}
+              style={phase === "uploading" ? { width: `${progress}%` } : undefined}
+            />
+          </div>
+          <p className="text-xs text-muted">
+            {phase === "uploading"
+              ? "Sending your file securely. Larger files or slower connections take longer."
+              : "Parsing transactions on the server. This can take up to a minute on mobile networks — please keep this page open."}
+          </p>
+        </div>
+      ) : (
+        <Button type="submit" className="w-full sm:w-auto" disabled={!file}>
+          Upload statement
+        </Button>
+      )}
     </form>
   );
 }

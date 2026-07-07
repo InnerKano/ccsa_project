@@ -22,6 +22,25 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Flaky mobile networks often fail to fetch a lazy-loaded route chunk. That
+    // surfaces as an uncaught error even though nothing is actually broken — a
+    // single reload re-fetches the chunk. Guard with a timestamp so we never
+    // loop if the chunk is genuinely gone (e.g. after a redeploy).
+    const message = error?.message ?? "";
+    const isChunkError =
+      error?.name === "ChunkLoadError" ||
+      /loading chunk|dynamically imported module|importing a module script failed/i.test(message);
+
+    if (isChunkError && typeof window !== "undefined") {
+      const key = "ccsa:last-chunk-reload";
+      const last = Number(window.sessionStorage.getItem(key) ?? 0);
+      if (Date.now() - last > 10_000) {
+        window.sessionStorage.setItem(key, String(Date.now()));
+        window.location.reload();
+        return;
+      }
+    }
+
     console.error("[CCSA] client-side error:", error);
   }, [error]);
 

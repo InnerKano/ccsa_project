@@ -2,7 +2,8 @@
  * Statements API — upload and list (docs/API.md).
  * Built on the shared apiFetch client; JWT is attached automatically.
  */
-import { apiFetch } from "@/lib/api/client";
+import { API_URL, ApiError, apiFetch } from "@/lib/api/client";
+import { getToken } from "@/lib/auth/session";
 
 export type StatementSummary = {
   id: string;
@@ -34,10 +35,32 @@ export function isAllowedStatementFile(file: File): boolean {
   return ALLOWED_EXTENSIONS.some((ext) => name.endsWith(ext));
 }
 
-export function uploadStatement(
-  file: File,
-  options: UploadStatementOptions = {},
-): Promise<StatementSummary> {
+/**
+ * Progress hooks for the upload. `fetch` cannot report request-body upload
+ * progress, so the upload uses XHR (below) to drive an honest two-phase UI:
+ * a determinate % while the file is being sent, then an indeterminate
+ * "processing" phase while the server parses it.
+ */
+export type UploadStatementHandlers = {
+  /** Percentage (0–100) of the request body uploaded. */
+  onProgress?: (percent: number) => void;
+  /** File fully sent; the server is now parsing it (no client-side %). */
+  onProcessing?: () => void;
+};
+
+/** Mirror of the JSON error shape from apiFetch (`{ detail }` / 422 array). */
+function extractXhrDetail(xhr: XMLHttpRequest): string {
+  try {
+    const data = JSON.parse(xhr.responseText);
+    if (typeof data?.detail === "string") return data.detail;
+    if (Array.isArray(data?.detail) && data.detail[0]?.msg) return data.detail[0].msg;
+  } catch {
+    /* fall through to a generic message */
+  }
+  return "Upload failed";
+}
+
+function buildStatementForm(file: File, options: UploadStatementOptions): FormData {
   const form = new FormData();
   form.append("file", file);
 
@@ -64,12 +87,54 @@ export function uploadStatement(
     if (value) form.append(key, value);
   }
 
-  // Trailing slash matches the FastAPI collection route exactly. Calling
-  // "/api/statements" (no slash) triggers a 307 redirect that mobile Safari
-  // refuses to follow on this preflighted, credentialed multipart POST.
-  return apiFetch<StatementSummary>("/api/statements/", {
-    method: "POST",
-    body: form,
+  return form;
+}
+
+export function uploadStatement(
+  file: File,
+  options: UploadStatementOptions = {},
+  handlers: UploadStatementHandlers = {},
+): Promise<StatementSummary> {
+  const form = buildStatementForm(file, options);
+
+  return new Promise<StatementSummary>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    // Trailing slash matches the FastAPI collection route exactly — avoids the
+    // 307 redirect that mobile WebKit refuses to follow on a preflighted,
+    // credentialed multipart POST.
+    xhr.open("POST", `${API_URL}/api/statements/`);
+
+    const token = getToken();
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      const percent = Math.min(100, Math.round((event.loaded / event.total) * 100));
+      handlers.onProgress?.(percent);
+    };
+    xhr.upload.onload = () => {
+      handlers.onProgress?.(100);
+      handlers.onProcessing?.();
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText) as StatementSummary);
+        } catch {
+          reject(new ApiError(xhr.status, "Malformed server response"));
+        }
+      } else {
+        reject(new ApiError(xhr.status, extractXhrDetail(xhr)));
+      }
+    };
+    // Status 0 = transport-level failure (network drop / timeout). The request
+    // may still have completed server-side, so callers should not present this
+    // as a hard "upload failed" that invites a duplicate re-upload.
+    xhr.onerror = () => reject(new ApiError(0, "Connection interrupted"));
+    xhr.ontimeout = () => reject(new ApiError(0, "Connection timed out"));
+
+    xhr.send(form);
   });
 }
 

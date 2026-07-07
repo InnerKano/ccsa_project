@@ -204,6 +204,20 @@ Every data-driven surface handles four states explicitly:
 - Async submit → set `loading`, clear previous error, `try/catch` around the API call, always reset `loading` in `finally`.
 - Errors surfaced to users come from `ApiError.message` (from `{ "detail": ... }`) — do not invent client-side copy that could contradict the API.
 
+### Long-running operations (upload)
+
+A short button spinner is enough for fast requests, but the statement upload can take ~20s+ on mobile networks (large PDFs, slower devices, server-side parsing). For an operation that long, a bare spinner reads as "stuck" and tempts the user to re-submit. So the upload shows **honest, two-phase progress** instead:
+
+1. **Uploading (determinate)** — a real percentage from XHR `upload.onprogress` (`lib/api/statements.ts`). `fetch` cannot report body-upload progress, which is the one justified reason the upload bypasses `apiFetch` and uses `XMLHttpRequest` (still inside the `lib/api/` transport layer — screens never touch XHR directly).
+2. **Analyzing (indeterminate)** — once the file is fully sent, the server is parsing and there is no client-side %, so show an animated bar + an **elapsed-seconds** counter so it reads as active work.
+
+Rules for long operations:
+- Disable the inputs and **replace** the primary button while busy (no double-submit; `handleSubmit` also guards with an early return).
+- Progress uses tokens only (`bg-brand-600` fill on `bg-surface-muted` track), `role="progressbar"` with `aria-label` + `aria-valuenow` (determinate phase), and `role="status"`/`aria-live="polite"` on the wrapper.
+- **Never invite a duplicate.** A transport-level drop (XHR `status === 0`) may mean the request still succeeded server-side, so show an `info` alert pointing to the dashboard — not an `error` that says "try again".
+
+App-wide, uncaught render errors fall back to `app/error.tsx` (graceful, recoverable) rather than a raw crash; transient lazy-chunk load failures (flaky mobile networks) auto-reload once instead of showing that screen.
+
 ---
 
 ## 7. Accessibility checklist (per screen)
