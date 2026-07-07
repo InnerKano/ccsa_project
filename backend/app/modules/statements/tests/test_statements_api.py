@@ -82,22 +82,122 @@ def test_get_statement_includes_transactions(
     assert first["category"] is None
 
 
-def test_delete_statement_returns_204(
-    client: TestClient, auth_headers: dict[str, str]
-) -> None:
+def _upload(client: TestClient, auth_headers: dict[str, str], name: str) -> str:
     with SAMPLE_CSV.open("rb") as csv_file:
         upload = client.post(
             "/api/statements",
-            files={"file": ("delete-me.csv", csv_file, "text/csv")},
+            files={"file": (name, csv_file, "text/csv")},
             headers=auth_headers,
         )
-    statement_id = upload.json()["id"]
+    assert upload.status_code == 201
+    return upload.json()["id"]
 
-    delete = client.delete(f"/api/statements/{statement_id}", headers=auth_headers)
-    assert delete.status_code == 204
+
+def test_archive_statement_hides_it_from_owner(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    statement_id = _upload(client, auth_headers, "archive-me.csv")
+
+    # DELETE is a soft archive (D22): 204, then hidden from reads and the list.
+    archive = client.delete(f"/api/statements/{statement_id}", headers=auth_headers)
+    assert archive.status_code == 204
 
     get_after = client.get(f"/api/statements/{statement_id}", headers=auth_headers)
     assert get_after.status_code == 404
+
+    listed = client.get("/api/statements", headers=auth_headers)
+    assert all(item["id"] != statement_id for item in listed.json())
+
+
+def test_archived_statement_listed_only_in_archived_view(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    statement_id = _upload(client, auth_headers, "archived-view.csv")
+    client.delete(f"/api/statements/{statement_id}", headers=auth_headers)
+
+    active = client.get("/api/statements", headers=auth_headers).json()
+    assert all(item["id"] != statement_id for item in active)
+
+    archived = client.get("/api/statements?archived=true", headers=auth_headers)
+    assert archived.status_code == 200
+    match = [item for item in archived.json() if item["id"] == statement_id]
+    assert len(match) == 1
+    assert match[0]["deleted_at"] is not None
+
+    # Restoring empties the archived view again.
+    client.post(f"/api/statements/{statement_id}/restore", headers=auth_headers)
+    archived_after = client.get("/api/statements?archived=true", headers=auth_headers).json()
+    assert all(item["id"] != statement_id for item in archived_after)
+
+
+def test_restore_statement_makes_it_visible_again(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    statement_id = _upload(client, auth_headers, "restore-me.csv")
+
+    assert (
+        client.delete(f"/api/statements/{statement_id}", headers=auth_headers).status_code
+        == 204
+    )
+
+    restore = client.post(
+        f"/api/statements/{statement_id}/restore", headers=auth_headers
+    )
+    assert restore.status_code == 200
+    assert restore.json()["id"] == statement_id
+
+    get_after = client.get(f"/api/statements/{statement_id}", headers=auth_headers)
+    assert get_after.status_code == 200
+
+
+def test_archived_statement_analyses_are_hidden_and_restored(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    statement_id = _upload(client, auth_headers, "analyzed.csv")
+
+    analysis = client.post(f"/api/analysis/{statement_id}", headers=auth_headers)
+    assert analysis.status_code == 201
+    analysis_id = analysis.json()["id"]
+
+    client.delete(f"/api/statements/{statement_id}", headers=auth_headers)
+    # Derived analyses of an archived statement are hidden alongside it (D22).
+    assert client.get("/api/analysis", headers=auth_headers).json() == []
+    assert client.get(f"/api/analysis/{analysis_id}", headers=auth_headers).status_code == 404
+
+    client.post(f"/api/statements/{statement_id}/restore", headers=auth_headers)
+    assert client.get(f"/api/analysis/{analysis_id}", headers=auth_headers).status_code == 200
+
+
+def test_permanent_delete_erases_statement(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    statement_id = _upload(client, auth_headers, "erase-me.csv")
+
+    permanent = client.delete(
+        f"/api/statements/{statement_id}/permanent", headers=auth_headers
+    )
+    assert permanent.status_code == 204
+
+    # Gone for good — not even restorable.
+    assert (
+        client.post(f"/api/statements/{statement_id}/restore", headers=auth_headers).status_code
+        == 404
+    )
+
+
+def test_other_user_cannot_archive_statement(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    other_user_headers: dict[str, str],
+) -> None:
+    statement_id = _upload(client, auth_headers, "mine.csv")
+
+    response = client.delete(
+        f"/api/statements/{statement_id}", headers=other_user_headers
+    )
+    assert response.status_code == 404
+    # Still visible to the real owner.
+    assert client.get(f"/api/statements/{statement_id}", headers=auth_headers).status_code == 200
 
 
 def test_other_user_cannot_access_statement(

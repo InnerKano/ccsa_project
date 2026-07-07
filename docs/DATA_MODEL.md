@@ -45,6 +45,7 @@ Types are PostgreSQL / SQLAlchemy targets. `PK` = primary key, `FK` = foreign ke
 | `currency` | VARCHAR(3) | no | Public | Default `USD`; single currency per statement |
 | `transaction_count` | INTEGER | no | Internal | Derived at parse time |
 | `uploaded_at` | TIMESTAMP | no | Internal | Default `now()` |
+| `deleted_at` | TIMESTAMP | yes | Internal | **Indexed**. Soft-archive marker (D22): `NULL` = active/visible to the owner; a timestamp = archived (hidden from the client and its analyses, retained server-side, restorable). Distinct from permanent erasure |
 
 ### `transactions` (module `statements`)
 
@@ -107,7 +108,8 @@ users (1) ──< statements (1) ──< transactions
 - **Cascade deletes are enforced at the schema level** (`ON DELETE CASCADE`), not only in application code:
 - Delete a `statement` → its `transactions` and `analyses` (and their children) are removed.
 - Delete a `user` → all their statements/analyses cascade. This is the mechanism behind account deletion ("right to be forgotten").
-- The `DELETE /api/statements/{id}` endpoint relies on this cascade; see `API.md`.
+- The **permanent** delete endpoint (`DELETE /api/statements/{id}/permanent`) relies on this cascade; see `API.md`.
+- **Soft archive (D22).** The everyday dashboard "delete" (`DELETE /api/statements/{id}`) sets `statements.deleted_at` instead of removing rows. An archived statement — and every `Analysis` derived from it — is hidden from the owner (queries filter `deleted_at IS NULL`) but retained. It is reversible (`POST /api/statements/{id}/restore`). No child rows are touched; visibility is scoped through the parent statement.
 - Re-running analysis on the same statement **does not replace** prior rows — each run appends a new `Analysis` (D10). "Current" result = latest by `created_at`.
 
 ---
@@ -132,8 +134,11 @@ When **Layer 2 (LLM)** runs, `Sensitive` fields (`description`, `amount`) may be
 - **At rest:** relies on the managed PostgreSQL provider's disk-level encryption (Railway/Render). No application-level column encryption in the MVP; if introduced, it is recorded in `DECISIONS.md` first.
 
 ### Retention & deletion
-- No fixed retention window in the MVP: data lives while the user keeps it. Users control their data via statement deletion and (future) account deletion, both cascade-deleting derived data.
-- Post-MVP candidate (Could Have): configurable auto-purge of analyses older than N months.
+- No fixed retention window in the MVP: data lives while the user keeps it.
+- **Two-tier deletion (D22).** The dashboard trash action is a **soft archive**: the statement (and its analyses) disappears from the client's view but is **retained** server-side (`deleted_at`), so it can be restored and so operational/analytical data is not lost by an accidental click. This is the default because it is reversible and low-risk.
+- **Permanent deletion / right to be forgotten** stays available and is a true hard delete (`DELETE /api/statements/{id}/permanent`), cascading to transactions and analyses. Account deletion (future, Could Have) cascades the same way. Erasure is therefore **explicit and irreversible** — archiving never silently substitutes for it.
+- **Responsible-data note (Red zone).** Retaining archived data is a deliberate trade-off against strict data minimization (D4). It is only acceptable if it is **disclosed** to the user (the archive UI/copy must not imply permanent erasure) and if a genuine erasure path exists — which is why the permanent delete above is kept. Any change here is reviewed line by line (`AI_RULES.md`).
+- Post-MVP candidate (Could Have): configurable auto-purge of archived statements / analyses older than N months.
 
 ### Logging & error messages
 - `Sensitive`/`PII`/`Secret` fields are never logged and never appear in error responses (`{"detail": "..."}` stays generic). Enforced per `ARCHITECTURE.md` Sensitive data security.

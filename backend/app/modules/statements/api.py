@@ -1,4 +1,4 @@
-"""Statements HTTP routes — statement upload, list, detail, delete."""
+"""Statements HTTP routes — upload, list, detail, archive, restore, permanent delete."""
 
 from uuid import UUID
 
@@ -14,10 +14,13 @@ from app.modules.statements.schemas import (
     StatementResponse,
 )
 from app.modules.statements.services import (
+    archive_statement_for_user,
     create_statement_from_upload,
     delete_statement_for_user,
     get_statement_for_user,
+    list_archived_statements_for_user,
     list_statements_for_user,
+    restore_statement_for_user,
 )
 
 router = APIRouter(prefix="/api/statements", tags=["statements"])
@@ -75,10 +78,17 @@ async def upload_statement(
 
 @router.get("/", response_model=list[StatementResponse])
 def list_statements(
+    archived: bool = False,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[StatementResponse]:
-    statements = list_statements_for_user(db, user.id)
+    # ?archived=true returns the soft-deleted (D22) statements for the "Archived"
+    # view; default returns only active ones.
+    statements = (
+        list_archived_statements_for_user(db, user.id)
+        if archived
+        else list_statements_for_user(db, user.id)
+    )
     return [StatementResponse.model_validate(s) for s in statements]
 
 
@@ -95,11 +105,43 @@ def get_statement(
 
 
 @router.delete("/{statement_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_statement(
+def archive_statement(
     statement_id: UUID,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> None:
+    """Soft-archive (D22): hide from the client, retain server-side, reversible.
+
+    This is the default "delete" a user triggers from the dashboard. Permanent
+    erasure is the explicit ``DELETE /{id}/permanent`` below.
+    """
+    archived = archive_statement_for_user(db, statement_id, user.id)
+    if not archived:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found")
+
+
+@router.post("/{statement_id}/restore", response_model=StatementResponse)
+def restore_statement(
+    statement_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> StatementResponse:
+    """Undo an archive (D22): make the statement and its analyses visible again."""
+    statement = restore_statement_for_user(db, statement_id, user.id)
+    if statement is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found")
+    return StatementResponse.model_validate(statement)
+
+
+@router.delete("/{statement_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+def delete_statement_permanent(
+    statement_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> None:
+    """Permanent hard delete (D22, DATA_MODEL.md §4): erase the statement and all
+    derived data (transactions, analyses) via schema cascade. Right to be forgotten.
+    """
     deleted = delete_statement_for_user(db, statement_id, user.id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found")

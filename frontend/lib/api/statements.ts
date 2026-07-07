@@ -11,6 +11,8 @@ export type StatementSummary = {
   currency: string;
   transaction_count: number;
   uploaded_at: string;
+  /** Null for active statements; ISO timestamp when archived (D22). */
+  deleted_at?: string | null;
 };
 
 export type DecimalStyle = "auto" | "us" | "eu";
@@ -142,6 +144,11 @@ export function listStatements(): Promise<StatementSummary[]> {
   return apiFetch<StatementSummary[]>("/api/statements/");
 }
 
+/** Soft-deleted statements for the "Archived" view (D22). */
+export function listArchivedStatements(): Promise<StatementSummary[]> {
+  return apiFetch<StatementSummary[]>("/api/statements/?archived=true");
+}
+
 export type TransactionSummary = {
   id: string;
   date: string;
@@ -156,4 +163,29 @@ export type StatementDetail = StatementSummary & {
 
 export function getStatement(statementId: string): Promise<StatementDetail> {
   return apiFetch<StatementDetail>(`/api/statements/${statementId}`);
+}
+
+/**
+ * Soft-archive a statement (D22): hides it (and its analyses) from the dashboard
+ * while it is retained server-side. Reversible with {@link restoreStatement}.
+ */
+export function archiveStatement(statementId: string): Promise<void> {
+  return apiFetch<void>(`/api/statements/${statementId}`, { method: "DELETE" });
+}
+
+/** Undo an archive — powers the "Undo" affordance after archiving (D22). */
+export function restoreStatement(statementId: string): Promise<StatementSummary> {
+  return apiFetch<StatementSummary>(`/api/statements/${statementId}/restore`, {
+    method: "POST",
+  });
+}
+
+/**
+ * Permanently erase a statement and all derived data (right to be forgotten, D22).
+ * Not reversible — kept distinct from the everyday archive above.
+ */
+export function deleteStatementPermanent(statementId: string): Promise<void> {
+  return apiFetch<void>(`/api/statements/${statementId}/permanent`, {
+    method: "DELETE",
+  });
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button, Card, CardContent } from "@/components/ui";
+import { Button, Card, CardContent, Spinner } from "@/components/ui";
 import type { AnalysisSummary } from "@/lib/api/analysis";
 import type { StatementSummary } from "@/lib/api/statements";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -9,14 +9,39 @@ type StatementCardProps = {
   statement: StatementSummary;
   latestAnalysis: AnalysisSummary | undefined;
   analyzing: boolean;
+  archiving: boolean;
   onRunAnalysis: (statementId: string) => void;
+  onArchive: (statementId: string) => void;
 };
+
+/** Outline trash glyph. Inline SVG avoids an icon dependency (DESIGN.md §8). */
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
 
 export function StatementCard({
   statement,
   latestAnalysis,
   analyzing,
+  archiving,
   onRunAnalysis,
+  onArchive,
 }: StatementCardProps) {
   return (
     <Card>
@@ -38,7 +63,7 @@ export function StatementCard({
           )}
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           {latestAnalysis && (
             <Link
               href={`/analysis/${latestAnalysis.id}`}
@@ -56,6 +81,19 @@ export function StatementCard({
           >
             {latestAnalysis ? "Re-run analysis" : "Run analysis"}
           </Button>
+          {/* Low-emphasis destructive action, kept off the primary path so it does
+              not clutter the card (DESIGN.md §2.1 restraint). Archive is reversible,
+              so an Undo affordance (StatementList) stands in for a confirm dialog. */}
+          <button
+            type="button"
+            onClick={() => onArchive(statement.id)}
+            disabled={archiving}
+            aria-label={`Archive ${statement.filename}`}
+            title="Archive"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-danger-bg hover:text-danger focus-visible:text-danger disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {archiving ? <Spinner size={16} /> : <TrashIcon />}
+          </button>
         </div>
       </CardContent>
     </Card>

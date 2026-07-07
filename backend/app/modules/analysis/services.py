@@ -19,6 +19,7 @@ from app.modules.analysis.models import (
 )
 from app.modules.analysis.rules.engine import RulesResult, run_layer_one
 from app.modules.auth.models import User
+from app.modules.statements.models import Statement
 from app.modules.statements.services import get_statement_for_user
 
 
@@ -83,9 +84,12 @@ def run_analysis_for_statement(
 
 
 def list_analyses_for_user(db: Session, user_id: UUID) -> list[Analysis]:
+    # Analyses of archived statements (D22) are hidden alongside their statement,
+    # so the dashboard never surfaces derived data the client "deleted".
     return (
         db.query(Analysis)
-        .filter(Analysis.user_id == user_id)
+        .join(Statement, Analysis.statement_id == Statement.id)
+        .filter(Analysis.user_id == user_id, Statement.deleted_at.is_(None))
         .order_by(Analysis.created_at.desc())
         .all()
     )
@@ -94,6 +98,11 @@ def list_analyses_for_user(db: Session, user_id: UUID) -> list[Analysis]:
 def get_analysis_for_user(db: Session, analysis_id: UUID, user_id: UUID) -> Analysis | None:
     return (
         db.query(Analysis)
-        .filter(Analysis.id == analysis_id, Analysis.user_id == user_id)
+        .join(Statement, Analysis.statement_id == Statement.id)
+        .filter(
+            Analysis.id == analysis_id,
+            Analysis.user_id == user_id,
+            Statement.deleted_at.is_(None),
+        )
         .first()
     )

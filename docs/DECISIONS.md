@@ -344,3 +344,24 @@ A profile that recognizes a document but extracts nothing (e.g. a summary-only 3
 **Sample update**: `sample.csv` / `sample_es.csv` gained synthetic fees (a recurring account-maintenance fee + a one-off overdraft / `COMISION SOBREGIRO`) so the happy path demonstrates the fee capability. Expected `sample.csv` result: `$41.47` recurring, `$97.48` savings (`$26.48` subscriptions + `$71.00` fees). Docs/tests updated accordingly.
 
 **Scope note**: this promotes "Detection of fees/charges in addition to subscriptions" from Could Have to implemented (`PROJECT_SCOPE.md`). Still no automatic cancellation (D5) and still rules-only (Layer 2 LLM remains Phase B, D2).
+
+### D22 — Two-tier statement deletion: soft archive (retained) + permanent erasure
+**Decision**: The dashboard trash action is a **soft archive**, not a hard delete. `statements` gains a nullable, indexed `deleted_at` column; archiving sets it, and every owner-facing query (`list_statements_for_user`, `get_statement_for_user`, and the analysis list/detail via a join on `statements.deleted_at`) filters `deleted_at IS NULL`. An archived statement and all its derived analyses vanish from the client's view but are **retained server-side** and **restorable** (`POST /api/statements/{id}/restore`). A separate **permanent** hard delete (`DELETE /api/statements/{id}/permanent`) preserves the cascade-based right to be forgotten (`DATA_MODEL.md` §3–§4).
+
+**Archived view + no auto-purge**: archived statements are reachable in a dedicated **`/dashboard/archived`** screen (`GET /api/statements?archived=true`) where each item can be **Restored** or **Deleted permanently** (irreversible → inline two-step confirm). There is **no time-based auto-purge**: archived data lives indefinitely (that is the point — retained for the business) and is only erased by an explicit permanent delete. A retention/auto-purge policy, if ever needed, is a separate business decision (Could Have), not a silent default — auto-deleting would contradict the "retain for the business" requirement that motivated the soft archive.
+
+**Endpoint semantics changed**: `DELETE /api/statements/{id}` now **archives** (soft) instead of hard-deleting. The everyday user action is the safe, reversible one; irreversible erasure is an explicit, separate call. The pre-existing "DELETE then GET → 404" contract still holds (archived rows read as absent by default).
+
+**Context / motivation**: the dashboard becomes cluttered as statements accumulate, and a user may want to remove entries. The product owner also wants collected data to survive a client-side delete for the business, while still honoring the client's wish to make it disappear — i.e. `enabled/disabled`, not destruction.
+
+**Alternatives considered**:
+- **Soft delete only** (retain always, no hard delete) → rejected: silently retaining data a user believes they erased contradicts the responsible-data stance (`DATA_MODEL.md` §4, purpose limitation / data minimization) and erasure-rights expectations (GDPR-style Art. 17) for a FinTech handling PII + financial data.
+- **Hard delete only** (wire the existing `DELETE` cascade to a trash button) → rejected: fully coherent with the old docs but fails the "retain for the business + reversible declutter" requirement, and makes an accidental click destroy analytical data.
+- **Boolean `is_deleted` / `enabled` flag** → rejected in favor of a `deleted_at` **timestamp**: same query cost, but records *when* it happened (audit) and cleanly encodes the tri-state (active / archived / restored) without a second column.
+- **Cascade the flag onto `analyses`/`transactions`** → rejected as redundant: visibility is derived through the parent statement (one join), avoiding drift between parent and child archive states.
+
+**Responsible-data conditions (Red zone, `AI_RULES.md`)**: retaining archived data is only acceptable because (a) a real erasure path exists (permanent delete), and (b) the archive UX/copy must not imply permanent deletion. Both are required, not optional.
+
+**UX (`frontend/DESIGN.md`)**: the trash control is a **low-emphasis icon button** (muted → danger on hover, `aria-label`), kept off the primary action path so it does not add visual noise (principle 1, *trust through restraint*). Because archiving is reversible, an **Undo** affordance (a `success` alert with Undo/Dismiss) stands in for a blocking confirmation dialog — the preferred pattern for reversible destructive actions and one that needs no modal primitive (which the design system does not have yet, `DESIGN.md` §8).
+
+**Migration**: `a7_statement_archive_001` adds nullable `statements.deleted_at` + index; `downgrade()` drops both. No backfill needed — existing rows are active (`NULL`).

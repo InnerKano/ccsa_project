@@ -160,6 +160,7 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 | `/` | Landing header (logo + theme toggle) | centered SaaS hero (eyebrow → h1 → description → CTAs → trust note) |
 | `/login`, `/register` | `AuthLayout` | forms with `Field` / `Button` / `Alert` |
 | `/dashboard` | `AppShell` + `RequireAuth` | `StatementList`, `StatementCard` |
+| `/dashboard/archived` | `AppShell` + `RequireAuth` | `ArchivedList`, `ArchivedStatementCard` (restore / permanent delete, D22) |
 | `/upload` | `AppShell` + `RequireAuth` | `StatementUploadForm` |
 | `/analysis/[id]` | `AppShell` + `RequireAuth` | `AnalysisDetailView` → `AnalysisSummaryCards`, `SpendingComparisonCard`, `SubscriptionList`, `RecommendationList` |
 
@@ -217,6 +218,14 @@ Rules for long operations:
 - **Never invite a duplicate.** A transport-level drop (XHR `status === 0`) may mean the request still succeeded server-side, so show an `info` alert pointing to the dashboard — not an `error` that says "try again".
 
 App-wide, uncaught render errors fall back to `app/error.tsx` (graceful, recoverable) rather than a raw crash; transient lazy-chunk load failures (flaky mobile networks) auto-reload once instead of showing that screen.
+
+### Destructive actions (archive / delete)
+
+Destructive controls (e.g. the statement **archive** trash button on `/dashboard`, D22) follow three rules:
+
+1. **Low emphasis, off the primary path.** They are icon-only, `text-muted` → `hover:text-danger` on a `hover:bg-danger-bg` hit area, never a filled `danger` button competing with the card's primary action (principle 1, *trust through restraint*). Icon-only controls **must** carry an `aria-label` (and a `title`). Icons are inline SVG — no icon dependency yet (§8).
+2. **Prefer Undo over a confirm dialog for reversible actions.** Statement deletion is a soft archive (reversible, `DATA_MODEL.md` §4), so instead of a blocking modal it archives immediately and surfaces a `success` `Alert` with an **Undo** action (and a Dismiss). This is the standard UX for reversible destructive actions and needs no modal primitive (still on the §8 backlog). The Undo notice must remain visible even when the list becomes empty (archiving the last item).
+3. **Confirm only when irreversible.** A true, unrecoverable delete (permanent erasure) *would* warrant an explicit confirmation step; the everyday archive does not.
 
 ---
 

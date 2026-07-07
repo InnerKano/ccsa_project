@@ -35,9 +35,14 @@ export function DashboardContent() {
             Your uploaded statements and savings analyses.
           </p>
         </div>
-        <Link href="/upload" className={`${buttonClass("primary")} inline-flex shrink-0`}>
-          Upload statement
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link href="/dashboard/archived" className={`${buttonClass("secondary")} inline-flex`}>
+            Archived
+          </Link>
+          <Link href="/upload" className={`${buttonClass("primary")} inline-flex`}>
+            Upload statement
+          </Link>
+        </div>
       </div>
 
       {showUploadSuccess && uploadedId && (

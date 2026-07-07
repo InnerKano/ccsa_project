@@ -138,9 +138,12 @@ Errors: `400` if the format is unrecognized, the file is empty, or no rows could
 Errors: `400` if the CSV cannot be parsed or minimum column mapping is missing.
 
 #### GET /api/statements
-Lists statements for the authenticated user.
+Lists statements for the authenticated user (metadata only, no transactions). Each item includes `deleted_at` (`null` for active statements).
 
-**Response**: `200 OK` → array of statements (metadata only, no transactions).
+**Query params**:
+- `archived`: `false` (default) → active statements only; `true` → the archived (soft-deleted, D22) statements for the "Archived" view, most-recently-archived first.
+
+**Response**: `200 OK` → array of statements.
 
 #### GET /api/statements/{id}
 Statement detail including normalized transactions.
@@ -160,9 +163,19 @@ Statement detail including normalized transactions.
 `404` if it does not exist or does not belong to the user.
 
 #### DELETE /api/statements/{id}
-Deletes a statement and its derived data.
+**Archives** a statement (soft delete, D22). Sets `deleted_at`; the statement and all its derived analyses are hidden from the owner (reads and lists filter them out) but **retained** server-side and restorable. This is the everyday dashboard "delete". The pre-existing contract holds: a subsequent `GET /api/statements/{id}` returns `404`.
 
-**Response**: `204 No Content`.
+**Response**: `204 No Content`. `404` if it does not exist or is not owned by the caller.
+
+#### POST /api/statements/{id}/restore
+Restores an archived statement (undo, D22): clears `deleted_at`, making the statement and its analyses visible again.
+
+**Response**: `200 OK` → the statement (same shape as `GET /api/statements` items). `404` if it does not exist or is not owned by the caller.
+
+#### DELETE /api/statements/{id}/permanent
+**Permanently deletes** a statement and all derived data — transactions and analyses — via schema cascade (D22, right to be forgotten, `DATA_MODEL.md` §3–§4). Irreversible. Works whether or not the statement was archived first.
+
+**Response**: `204 No Content`. `404` if it does not exist or is not owned by the caller.
 
 ---
 

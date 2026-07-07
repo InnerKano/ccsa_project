@@ -29,6 +29,13 @@ class Statement(Base):
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    # Soft-archive marker (D22). NULL = active/visible to the owner; a timestamp =
+    # archived: hidden from the client (and its derived analyses) but retained
+    # server-side and restorable. Permanent erasure is a separate hard delete
+    # (DATA_MODEL.md §4). Indexed because every owner-facing query filters on it.
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
 
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction", back_populates="statement", cascade="all, delete-orphan"

@@ -13,6 +13,9 @@ class StatementResponse(BaseModel):
     currency: str
     transaction_count: int
     uploaded_at: datetime
+    # Null for active statements; set when archived (D22). Lets the archived view
+    # show "archived on …" without a second query.
+    deleted_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
