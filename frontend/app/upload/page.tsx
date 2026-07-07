@@ -13,8 +13,8 @@ export default function UploadPage() {
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Upload statement</h1>
             <p className="mt-1 text-muted">
-              Import a delimited export from your bank. We parse it in memory and save only the
-              transactions needed for analysis.
+              Import a CSV/TSV/TXT export or a bank statement PDF. We parse it in memory and save
+              only the transactions needed for analysis.
             </p>
           </div>
 

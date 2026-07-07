@@ -90,7 +90,7 @@ export function StatementUploadForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
       <div className="space-y-1.5">
         <label htmlFor="statement-file" className="block text-sm font-medium text-foreground">
           Statement file
@@ -176,21 +176,21 @@ export function StatementUploadForm() {
             id="date-column"
             value={dateColumn}
             onChange={(e) => setDateColumn(e.target.value)}
-            placeholder="e.g. Fecha"
+            placeholder="e.g. Transaction Date"
           />
           <Field
             label="Description column"
             id="description-column"
             value={descriptionColumn}
             onChange={(e) => setDescriptionColumn(e.target.value)}
-            placeholder="e.g. Descripción"
+            placeholder="e.g. Description"
           />
           <Field
             label="Amount column"
             id="amount-column"
             value={amountColumn}
             onChange={(e) => setAmountColumn(e.target.value)}
-            placeholder="e.g. Monto"
+            placeholder="e.g. Amount"
           />
           <Field
             label="Debit column"

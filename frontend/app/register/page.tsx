@@ -20,6 +20,20 @@ export default function RegisterPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
     setLoading(true);
     try {
       await register(email, password);
@@ -45,7 +59,7 @@ export default function RegisterPage() {
           </>
         }
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <Field
             label="Email"
             id="email"
@@ -53,7 +67,6 @@ export default function RegisterPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
           <Field
             label="Password"
@@ -62,8 +75,6 @@ export default function RegisterPage() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
             hint="At least 8 characters"
           />
           {error && <Alert variant="error">{error}</Alert>}

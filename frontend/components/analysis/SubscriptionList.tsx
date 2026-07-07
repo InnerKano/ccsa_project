@@ -8,6 +8,17 @@ function formatCategoryLabel(category: string | null): string {
   return category.replace(/_/g, " ");
 }
 
+function formatCadenceLabel(cadence: string): string {
+  switch (cadence) {
+    case "monthly":
+      return "Monthly";
+    case "suspected":
+      return "Suspected (single statement)";
+    default:
+      return cadence.replace(/_/g, " ");
+  }
+}
+
 type SubscriptionListProps = {
   subscriptions: DetectedSubscription[];
   currency?: string;
@@ -35,8 +46,8 @@ export function SubscriptionList({ subscriptions, currency = "USD" }: Subscripti
               >
                 <div className="min-w-0">
                   <p className="font-medium text-foreground">{sub.merchant}</p>
-                  <p className="text-sm text-muted capitalize">
-                    {sub.cadence}
+                  <p className="text-sm text-muted">
+                    {formatCadenceLabel(sub.cadence)}
                     {sub.category && (
                       <>
                         {" · "}

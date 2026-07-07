@@ -40,8 +40,8 @@ export default function HomePage() {
           See where your recurring money goes
         </h1>
         <p className="mt-4 text-lg text-muted">
-          Upload a card statement CSV. We detect subscriptions and recurring charges, then
-          estimate how much you could save — no spreadsheet required.
+          Upload a card statement (CSV/TSV/TXT or PDF). We detect subscriptions and recurring
+          charges, then estimate how much you could save — no spreadsheet required.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/register" className={buttonClass("primary")}>

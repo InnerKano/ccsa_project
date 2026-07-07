@@ -20,6 +20,16 @@ export default function LoginPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+
     setLoading(true);
     try {
       await login(email, password);
@@ -45,7 +55,7 @@ export default function LoginPage() {
           </>
         }
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <Field
             label="Email"
             id="email"
@@ -53,7 +63,6 @@ export default function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
           <Field
             label="Password"
@@ -62,8 +71,6 @@ export default function LoginPage() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
           />
           {error && <Alert variant="error">{error}</Alert>}
           <Button type="submit" className="w-full" loading={loading}>

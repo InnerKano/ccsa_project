@@ -72,7 +72,8 @@ export function StatementList() {
         <CardContent>
           <CardTitle>No statements yet</CardTitle>
           <p className="mt-2 text-sm text-muted">
-            Upload a CSV export from your bank to detect subscriptions and estimate savings.
+            Upload a statement export (CSV/TSV/TXT) or bank PDF to detect subscriptions and
+            estimate savings.
           </p>
           <Link href="/upload" className={`${buttonClass("primary")} mt-4 inline-flex`}>
             Upload statement
