@@ -78,8 +78,14 @@ Dark mode is implemented via **`[data-theme="dark"]` on `<html>`** — semantic 
 ### 2.2 Typography
 
 - **Family:** system UI stack (`--font-sans`). No web-font network dependency → fast, robust in Docker/offline, native feel. `--font-mono` is available for figures/IDs if a monospace column ever helps scanning.
-- **Scale (Tailwind):** `text-xs` hints · `text-sm` body/controls · `text-base` card titles · `text-lg` section/header brand · `text-2xl` page titles · `text-3xl`/`sm:text-4xl` landing hero.
-- **Weight:** `font-medium` for labels/controls/nav, `font-semibold` for titles. Body stays regular.
+- **Scale (Tailwind):** `text-xs` hints · `text-sm` body/controls · `text-base` card titles · `text-lg` section/header brand · `text-2xl` page titles · `text-4xl`/`sm:text-5xl`/`lg:text-6xl` landing hero · `text-lg` landing description · `text-sm` trust note.
+- **Landing hero (SaaS pattern):** centered block inside `max-w-3xl` (~672px). Hierarchy top → bottom:
+  1. **Eyebrow** — product name, uppercase, `text-xs sm:text-sm font-medium tracking-[0.2em] text-muted` (brand present, low visual weight).
+  2. **`h1`** — value proposition, `text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight`; **one** brand-accent word only (`text-brand-700` on “money”).
+  3. **Description** — `text-lg text-muted max-w-xl` (~576px), `leading-relaxed`.
+  4. **CTAs** — centered row, `gap-4` (16px), primary + secondary via `buttonClass`.
+  5. **Trust note** — `text-sm text-muted`, `mt-10 sm:mt-12` (40–48px above).
+- **Weight:** `font-medium` for labels/controls/nav/eyebrow, `font-semibold` for in-app page titles, `font-bold` for landing `h1` only. Body stays regular.
 - **Color pairing:** titles/body in `foreground`; supporting text in `muted`.
 
 ### 2.3 Spacing, radius, elevation
@@ -97,9 +103,9 @@ Dark mode is implemented via **`[data-theme="dark"]` on `<html>`** — semantic 
 
 ## 3. Layout & responsiveness
 
-- **Containers:** authenticated content is centered at `max-w-5xl`; auth screens at `max-w-md`; landing/marketing copy at `max-w-2xl`. Horizontal page padding `px-4`.
-- **Header height:** `h-14` in `AppShell`, `py-4` brand bar in `AuthLayout`.
-- **Mobile-first:** default styles target small screens; layer `sm:`/`md:` up. Everything must be usable at 360px wide. The hero is the only place with a responsive type bump so far (`text-3xl sm:text-4xl`).
+- **Containers:** authenticated content is centered at `max-w-5xl`; auth screens at `max-w-md`; landing hero at `max-w-3xl` (centered, `text-center`). Description and trust note cap at `max-w-xl` (~576px). Horizontal page padding `px-4`.
+- **Header height:** `h-14` in `AppShell`, `py-4` brand bar in `AuthLayout` and landing. Public headers (`/`, login, register) share the same bar: `border-b border-border bg-surface px-4 py-4`, inner row `flex items-center justify-between gap-4` — **full viewport width**, not capped to the hero container.
+- **Mobile-first:** default styles target small screens; layer `sm:`/`lg:` up. Everything must be usable at 360px wide. Landing hero scales `text-4xl → sm:text-5xl → lg:text-6xl`; vertical padding `py-20 sm:py-28` for generous whitespace.
 - **Full height:** page shells use `min-h-dvh` (dynamic viewport height — correct on mobile browsers).
 
 ---
@@ -141,7 +147,7 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 
 | Route | Shell | Feature components |
 |---|---|---|
-| `/` | Landing header | — (CTAs only) |
+| `/` | Landing header (logo + theme toggle) | centered SaaS hero (eyebrow → h1 → description → CTAs → trust note) |
 | `/login`, `/register` | `AuthLayout` | forms with `Field` / `Button` / `Alert` |
 | `/dashboard` | `AppShell` + `RequireAuth` | `StatementList`, `StatementCard` |
 | `/upload` | `AppShell` + `RequireAuth` | `StatementUploadForm` |

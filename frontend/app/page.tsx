@@ -38,15 +38,23 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-2xl flex-1 flex-col justify-center px-4 py-16">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          See where your recurring money goes
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-20 text-center sm:py-28">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted sm:text-sm">
+          Credit Card Savings Analyzer
+        </p>
+
+        <h1 className="mt-4 max-w-2xl text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:mt-5 sm:text-5xl sm:leading-[1.08] lg:text-6xl">
+          See where your
+          <br />
+          recurring <span className="text-brand-700">money</span> goes
         </h1>
-        <p className="mt-4 text-lg text-muted">
+
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted sm:mt-8">
           Upload a card statement (CSV/TSV/TXT or PDF). We detect subscriptions and recurring
           charges, then estimate how much you could save — no spreadsheet required.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+
+        <div className="mt-8 flex flex-wrap justify-center gap-4 sm:mt-10">
           <Link href="/register" className={buttonClass("primary")}>
             Get started
           </Link>
@@ -54,7 +62,8 @@ export default function HomePage() {
             Sign in
           </Link>
         </div>
-        <p className="mt-10 text-sm text-muted">
+
+        <p className="mt-10 max-w-xl text-sm text-muted sm:mt-12">
           Your raw file is never stored — only normalized transactions needed for analysis.
         </p>
       </main>

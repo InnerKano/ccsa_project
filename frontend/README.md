@@ -13,7 +13,7 @@ Next.js 15 (App Router) client for the Credit Card Savings Analyzer. Consumes th
 
 | Route | Auth | Purpose |
 |---|---|---|
-| `/` | Public | Landing; redirects signed-in users to `/dashboard` |
+| `/` | Public | Landing (SaaS hero — see `DESIGN.md` §2.2); redirects signed-in users to `/dashboard` |
 | `/login`, `/register` | Guest only | Auth forms (`AuthLayout`) |
 | `/dashboard` | Protected | Statement list, run/re-run analysis |
 | `/upload` | Protected | CSV upload (`POST /api/statements`) |
