@@ -22,6 +22,20 @@ def test_analyze_statement_detects_subscriptions(
     assert merchants == {"NETFLIX", "SPOTIFY", "AMAZON PRIME"}
     assert len(body["recommendations"]) == 2
 
+    comparison = body["spending_comparison"]
+    before = {s["category"]: s["amount"] for s in comparison["before"]}
+    after = {s["category"]: s["amount"] for s in comparison["after"]}
+    assert before == {
+        "streaming": "15.49",
+        "shopping": "14.99",
+        "music": "10.99",
+    }
+    assert after == {
+        "shopping": "14.99",
+        "streaming": "0.00",
+        "music": "0.00",
+    }
+
 
 def test_analysis_is_persisted_and_retrievable(
     client: TestClient, auth_headers: dict[str, str], statement_id: str

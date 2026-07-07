@@ -171,7 +171,7 @@ Deletes a statement and its derived data.
 #### POST /api/analysis/{statement_id}
 Runs analysis on an uploaded statement: **Layer 1 (rules)** detects recurring charges/subscriptions and estimates savings; **Layer 2 (LLM, optional)** adds finer categorization and natural-language recommendations. If Layer 2 fails or is disabled, Layer 1 results are returned with `ai_enabled: false`.
 
-In the MVP only Layer 1 is active, so `ai_enabled` is always `false` (Layer 2 arrives in Phase B — `middle-phases.md`). Detection groups transactions by canonical merchant (D7); a charge recurring in ≥ 2 months with a stable amount is a subscription. `recommendations` and `estimated_savings` cover only **discretionary** recurring categories (streaming, music, gaming, software, fitness — D16); essential recurring charges are still listed under `detected_subscriptions` but not flagged for cancellation. Re-running appends a new analysis (D10). `404` if the statement does not exist or is not owned by the caller.
+In the MVP only Layer 1 is active, so `ai_enabled` is always `false` (Layer 2 arrives in Phase B — `middle-phases.md`). Detection groups transactions by canonical merchant (D7); a charge recurring in ≥ 2 months with a stable amount is a subscription. `recommendations` and `estimated_savings` cover only **discretionary** recurring categories (streaming, music, gaming, software, fitness — D16); essential recurring charges are still listed under `detected_subscriptions` but not flagged for cancellation. `spending_comparison` aggregates `detected_subscriptions` by category for before/after charts: **before** is current recurring spend; **after** zeros discretionary categories (same D16 rule). Category names are open-ended (D9) — new categories added to the vocabulary appear automatically without API changes. Re-running appends a new analysis (D10). `404` if the statement does not exist or is not owned by the caller.
 
 **Response**: `201 Created`
 ```json
@@ -187,6 +187,14 @@ In the MVP only Layer 1 is active, so `ai_enabled` is always `false` (Layer 2 ar
   "recommendations": [
     { "title": "Cancel Netflix", "detail": "No recent usage detected; you could save ~$15.49/mo.", "estimated_saving": 15.49 }
   ],
+  "spending_comparison": {
+    "before": [
+      { "category": "streaming", "amount": "15.49", "percentage": "37.4" }
+    ],
+    "after": [
+      { "category": "streaming", "amount": "0.00", "percentage": "0.0" }
+    ]
+  },
   "created_at": "2026-07-04T00:00:00Z"
 }
 ```
@@ -199,7 +207,7 @@ Lists saved analyses for the user.
 #### GET /api/analysis/{id}
 Retrieves a saved analysis with full detail.
 
-**Response**: `200 OK` → full analysis (same shape as POST). `404` if it does not exist or does not belong to the user.
+**Response**: `200 OK` → full analysis (same shape as POST). Includes `spending_comparison` (not present on list summaries). `404` if it does not exist or does not belong to the user.
 
 ---
 

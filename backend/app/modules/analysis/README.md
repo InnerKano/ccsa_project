@@ -11,6 +11,7 @@
 **Layer 1 rules (`rules/`, D16, bilingual EN+ES):**
 - `vocabulary.py` — *data*: known-merchant aliases, EN+ES category keywords, controlled category set (D9), discretionary categories.
 - `engine.py` — pure, DB-free logic: canonical merchant (D7), categorization, recurrence detection (≥ 2 months, stable amount), savings + recommendations. Unit-testable without Postgres.
+- `spending_breakdown.py` — pure aggregation for spending-comparison charts: groups `detected_subscriptions` by category (open-ended D9 vocabulary), simulates after-state via `DISCRETIONARY_CATEGORIES` (D16). Computed at read time in `AnalysisResponse`; not persisted.
 
 **Persistence rules:**
 - Re-analysis appends a new `Analysis` (D10); "current" = latest by `created_at`.
