@@ -1,4 +1,4 @@
-import { Card, CardContent, CardTitle } from "@/components/ui";
+import { Card, CardContent, CardTitle, InitialAvatar } from "@/components/ui";
 import type { DetectedSubscription } from "@/lib/api/analysis";
 import { cn } from "@/lib/cn";
 import { formatCurrency } from "@/lib/format";
@@ -42,27 +42,30 @@ export function SubscriptionList({ subscriptions, currency = "USD" }: Subscripti
             {subscriptions.map((sub) => (
               <li
                 key={`${sub.merchant}-${sub.amount}-${sub.cadence}`}
-                className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between"
               >
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground">{sub.merchant}</p>
-                  <p className="text-sm text-muted">
-                    {formatCadenceLabel(sub.cadence)}
-                    {sub.category && (
-                      <>
-                        {" · "}
-                        <span
-                          className={cn(
-                            "inline-flex rounded-md bg-surface-muted px-2 py-0.5 text-xs font-medium text-foreground",
-                          )}
-                        >
-                          {formatCategoryLabel(sub.category)}
-                        </span>
-                      </>
-                    )}
-                  </p>
+                <div className="flex min-w-0 items-start gap-3">
+                  <InitialAvatar label={sub.merchant} />
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{sub.merchant}</p>
+                    <p className="mt-1 text-sm text-muted">
+                      {formatCadenceLabel(sub.cadence)}
+                      {sub.category && (
+                        <>
+                          {" · "}
+                          <span
+                            className={cn(
+                              "inline-flex rounded-md bg-surface-muted px-2 py-0.5 text-xs font-medium text-foreground",
+                            )}
+                          >
+                            {formatCategoryLabel(sub.category)}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <p className="shrink-0 text-sm font-semibold text-foreground">
+                <p className="shrink-0 text-sm font-semibold text-foreground sm:pl-3">
                   {formatCurrency(sub.amount, currency)}
                   <span className="font-normal text-muted"> / mo</span>
                 </p>

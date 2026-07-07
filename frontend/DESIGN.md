@@ -61,7 +61,9 @@ All visual constants live as **Tailwind v4 CSS-first tokens** in [`app/globals.c
 - Money: render amounts in `foreground`. Reserve `success`/`danger` for *directional* meaning (e.g. estimated savings positive, an overspend), not for every number.
 - Status colors require a non-color cue too (icon, label) — never rely on color alone (accessibility).
 
-**Chart palette (`chart-1` … `chart-8`).** Reserved for **data visualization** (spending-comparison donut segments). These are semantic data colors, not a second brand accent. Map categories to `var(--color-chart-N)` via `lib/analysis/chartColors.ts` so the same category keeps the same color in before/after panels. Dark-theme overrides live in `globals.css` → `[data-theme="dark"]`. Reserve `brand-*` for the savings callout only (`text-brand-700` on the “You'll save …” line).
+**Chart palette (`chart-1` … `chart-8`).** Reserved for **data visualization** (spending-comparison donut segments). These are semantic data colors, not a second brand accent. Map categories to `var(--color-chart-N)` via `lib/analysis/chartColors.ts` so the same category keeps the same color in before/after panels. Dark-theme overrides live in `globals.css` → `[data-theme="dark"]`. Reserve `brand-*` for the savings emphasis only — concentrated in the insight card below the donuts (check icon, annual figure, decorative wave); the donut panels themselves carry no savings text.
+
+**Insight card (rhythm break).** A full-width block inside `SpendingComparisonCard`, below the two donut panels and only shown when there are savings. It is the **single** savings callout for the card (the per-panel “You'll save …” note was removed to avoid redundancy). It states the monthly benefit in the title and the annual equivalent (`monthly × 12`) in the subtitle — one emphasis moment that breaks the monotony of data cards/lists (a UX pattern of alternating information blocks with emphasis blocks). Structure: container uses `bg-background` (a step darker than the `surface` card it sits in, so the block reads as a distinct inset — most noticeable in dark theme), `--radius-card`, `px-6 py-5`, `border-border`. Left column (`items-center`) = brand-tinted check icon in a `h-12 w-12` circle + `text-base font-semibold` title (monthly amount inline) + `text-sm text-muted` subtitle with the annual amount in `text-brand-700`. A decorative dashed wave (`text-brand-500`, `aria-hidden`) is absolutely anchored to the right edge and vertically centered, spans ≤ ⅓ of the card width, and fades out at **both** ends via a symmetric `mask-image` gradient (`transparent → solid → transparent`) so it peaks in the middle and never looks like it spills out of the card or reaches the text; hidden below `sm` and `pointer-events-none`.
 
 ### 2.1.1 Dark theme
 
@@ -141,6 +143,9 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 
 ### DonutChart
 - SVG donut for category spend breakdown. Props: `segments`, `total`, `currency`. Center shows formatted total + “TOTAL” label. Segment colors come from `var(--color-chart-N)` — never hard-coded hex. Animations respect `prefers-reduced-motion`. Used by `SpendingComparisonCard` on `/analysis/[id]`.
+
+### InitialAvatar
+- Circular placeholder showing an entity's initial (first alphanumeric char, upper-cased) — a SaaS pattern that anchors list rows and improves vertical scanning. Neutral by design (`bg-surface-muted`, `text-foreground`, subtle `border-border`) so it does **not** dilute the brand accent (§2.1). Decorative (`aria-hidden`) — the adjacent text names the entity for assistive tech. Used in `SubscriptionList`.
 
 **Adding a component:** it belongs in `components/ui/` if it is presentation-only and reused; in `components/<feature>/` if it carries feature context. It must consume tokens (no hex), expose `className` passthrough via `cn()`, forward refs when it wraps a native control, and be exported from the relevant barrel.
 

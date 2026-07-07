@@ -30,9 +30,7 @@ export function SpendingComparisonCard({
 
   const savingsAmount = Number(estimatedSavings);
   const hasSavings = Number.isFinite(savingsAmount) && savingsAmount > 0;
-  const savingsNote = hasSavings
-    ? `✓ You'll save ${formatCurrency(estimatedSavings, currency)} / month`
-    : "No discretionary savings flagged for this statement.";
+  const annualSavings = savingsAmount * 12;
 
   return (
     <Card>
@@ -60,12 +58,78 @@ export function SpendingComparisonCard({
             slices={comparison.after}
             categoryColors={categoryColors}
             currency={currency}
-            savingsNote={savingsNote}
-            showSavingsNote
-            highlightSavings={hasSavings}
           />
         </div>
+
+        {hasSavings && (
+          <SavingsInsightCard
+            monthlySavings={formatCurrency(estimatedSavings, currency)}
+            annualSavings={formatCurrency(annualSavings, currency)}
+          />
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+type SavingsInsightCardProps = {
+  monthlySavings: string;
+  annualSavings: string;
+};
+
+function SavingsInsightCard({ monthlySavings, annualSavings }: SavingsInsightCardProps) {
+  return (
+    <div className="relative mt-8 overflow-hidden rounded-[var(--radius-card)] border border-border bg-background px-6 py-5">
+      <div className="relative z-10 flex items-center gap-4">
+        <span
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700"
+          aria-hidden
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </span>
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-foreground">
+            Good news! After removing discretionary subscriptions, you save{" "}
+            {monthlySavings} every month.
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            That&apos;s{" "}
+            <span className="font-semibold text-brand-700">{annualSavings}</span> per
+            year kept in your pocket.
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/3 max-w-[240px] [mask-image:linear-gradient(to_right,transparent,#000_30%,#000_70%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,#000_30%,#000_70%,transparent)] sm:block"
+        aria-hidden
+      >
+        <svg
+          className="h-full w-full text-brand-500"
+          viewBox="0 0 240 64"
+          fill="none"
+          preserveAspectRatio="xMaxYMid meet"
+        >
+          <path
+            d="M240 32 Q 205 10 170 30 T 100 28 T 0 34"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray="1.5 9"
+          />
+        </svg>
+      </div>
+    </div>
   );
 }

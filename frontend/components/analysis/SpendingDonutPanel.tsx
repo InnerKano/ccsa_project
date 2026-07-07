@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { DonutChart } from "@/components/ui/DonutChart";
 import type { CategorySpendSlice } from "@/lib/api/analysis";
 import { formatCategoryLabel } from "@/lib/analysis/chartColors";
-import { cn } from "@/lib/cn";
 import { formatCurrency } from "@/lib/format";
 
 type SpendingDonutPanelProps = {
@@ -14,9 +13,6 @@ type SpendingDonutPanelProps = {
   slices: CategorySpendSlice[];
   categoryColors: Map<string, string>;
   currency?: string;
-  savingsNote?: string;
-  showSavingsNote?: boolean;
-  highlightSavings?: boolean;
 };
 
 function sliceTotal(slices: CategorySpendSlice[]): number {
@@ -35,28 +31,8 @@ export function SpendingDonutPanel({
   slices,
   categoryColors,
   currency = "USD",
-  savingsNote,
-  showSavingsNote = false,
-  highlightSavings = false,
 }: SpendingDonutPanelProps) {
   const total = useMemo(() => sliceTotal(slices), [slices]);
-  const [noteVisible, setNoteVisible] = useState(false);
-
-  useEffect(() => {
-    if (!showSavingsNote || !savingsNote) {
-      setNoteVisible(false);
-      return;
-    }
-
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (media.matches) {
-      setNoteVisible(true);
-      return;
-    }
-
-    const timer = window.setTimeout(() => setNoteVisible(true), 900);
-    return () => window.clearTimeout(timer);
-  }, [showSavingsNote, savingsNote]);
 
   const segments = useMemo(
     () =>
@@ -110,19 +86,6 @@ export function SpendingDonutPanel({
           ))}
         </ul>
       </div>
-
-      {showSavingsNote && savingsNote && (
-        <p
-          className={cn(
-            "mt-6 text-sm font-medium transition-opacity duration-500",
-            noteVisible ? "opacity-100" : "opacity-0",
-            highlightSavings ? "text-brand-700" : "text-muted",
-          )}
-          role="status"
-        >
-          {savingsNote}
-        </p>
-      )}
     </div>
   );
 }

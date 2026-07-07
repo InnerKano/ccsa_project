@@ -3,5 +3,6 @@ export { Button, buttonClass, type ButtonVariant, type ButtonSize } from "./Butt
 export { Card, CardHeader, CardContent, CardTitle } from "./Card";
 export { DonutChart, type DonutSegment } from "./DonutChart";
 export { Field, Input, inputClassName } from "./Input";
+export { InitialAvatar } from "./InitialAvatar";
 export { Spinner } from "./Spinner";
 export { ThemeToggle } from "./ThemeToggle";

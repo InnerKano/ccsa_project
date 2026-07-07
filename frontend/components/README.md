@@ -24,7 +24,7 @@ components/
 │   ├── SpendingDonutPanel.tsx
 │   ├── SubscriptionList.tsx
 │   └── RecommendationList.tsx
-└── ui/                   # primitives (Button, Field, Card, DonutChart, ThemeToggle, …)
+└── ui/                   # primitives (Button, Field, Card, DonutChart, InitialAvatar, ThemeToggle, …)
 ```
 
 ## Rules
