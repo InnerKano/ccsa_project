@@ -32,6 +32,12 @@ CATEGORIES: frozenset[str] = frozenset(
         "fitness",
         "insurance",
         "income",
+        # Transaction-type categories (D20): classify by the stable structural
+        # part of the description (transfers, cash, fees) even when the specific
+        # merchant is unknown. This keeps most rows off "other" without guessing.
+        "transfer",
+        "cash",
+        "fees",
         "other",
     }
 )
@@ -75,6 +81,7 @@ MERCHANT_ALIASES: tuple[tuple[str, str, str], ...] = (
     ("GODADDY", "GODADDY", "software"),
     ("DROPBOX", "DROPBOX", "software"),
     ("ICLOUD", "APPLE ICLOUD", "software"),
+    ("GOOGLE ONE", "GOOGLE ONE", "software"),  # storage subscription (before bare GOOGLE)
     ("GOOGLE", "GOOGLE", "software"),
     ("APPLE", "APPLE", "software"),
     # --- fitness ---
@@ -125,6 +132,7 @@ KNOWN_SUBSCRIPTIONS: frozenset[str] = frozenset(
         "IDENTITY GUARD",
         "DROPBOX",
         "APPLE ICLOUD",
+        "GOOGLE ONE",
         "XBOX GAME PASS",
         "PLAYSTATION",
         "NINTENDO",
@@ -189,6 +197,33 @@ MERCHANT_NOISE_TOKENS: frozenset[str] = frozenset(
         "WF",
         "ABC",
         "IN",
+        # Transaction-structure words that are not part of a merchant name (D20).
+        # Removing them stops garbage/merged canonical names like "FROM CAPITAL
+        # ONE", "TO FONDO DE", "DEBIT CARD CTLP", "ZELLE MONEY TO".
+        "FROM",
+        "TO",
+        "ZELLE",
+        "ZEL",
+        "MONEY",
+        "CARD",
+        "DEBIT",
+        "CREDIT",
+        "MOBILE",
+        "ONLINE",
+        "PMT",
+        "PMTS",
+        "PAYMENT",
+        "PAYMENTS",
+        "TRANSFER",
+        "ATM",
+        "RECEIVED",
+        # Spanish articles / prepositions (e.g. "Fondo de Emergencia").
+        "DE",
+        "DEL",
+        "LA",
+        "EL",
+        "PARA",
+        "POR",
     }
 )
 
@@ -203,6 +238,49 @@ CATEGORY_KEYWORDS: tuple[tuple[str, str], ...] = (
     ("NOMINA", "income"),
     ("NÓMINA", "income"),
     ("SALARIO", "income"),
+    ("SUELDO", "income"),
+    ("INTEREST PAID", "income"),
+    ("INTEREST EARNED", "income"),
+    ("MONTHLY INTEREST", "income"),
+    ("INTERÉS", "income"),
+    ("INTERES", "income"),
+    ("DIVIDEND", "income"),
+    # transaction-type: transfers (Zelle / wires / internal fund & card payments),
+    # bilingual (D20). Placed before merchant keywords so structural cues win.
+    ("ZELLE", "transfer"),
+    ("ZEL FROM", "transfer"),
+    ("ZEL TO", "transfer"),
+    ("WIRE TRANSFER", "transfer"),
+    ("TRANSFERENCIA", "transfer"),
+    ("REMITLY", "transfer"),
+    ("REMITTANCE", "transfer"),
+    ("REMESA", "transfer"),
+    ("FONDO", "transfer"),
+    ("INVERSIÓN", "transfer"),
+    ("INVERSION", "transfer"),
+    ("AHORRO", "transfer"),
+    ("MOBILE PMT", "transfer"),
+    ("ONLINE PMT", "transfer"),
+    ("WEB PMT", "transfer"),
+    ("MOBILE PAYMENT", "transfer"),
+    # transaction-type: bank fees (before cash so "ATM FEE" is a fee, not cash)
+    ("OVERDRAFT", "fees"),
+    ("SOBREGIRO", "fees"),
+    ("SERVICE FEE", "fees"),
+    ("MONTHLY FEE", "fees"),
+    ("MAINTENANCE FEE", "fees"),
+    ("ANNUAL FEE", "fees"),
+    ("LATE FEE", "fees"),
+    ("ATM FEE", "fees"),
+    ("CLUB FEES", "fees"),
+    ("FEES", "fees"),
+    ("COMISIÓN", "fees"),
+    ("COMISION", "fees"),
+    # transaction-type: cash withdrawals
+    ("ATM", "cash"),
+    ("CAJERO", "cash"),
+    ("CASH WITHDRAWAL", "cash"),
+    ("EFECTIVO", "cash"),
     # groceries
     ("WHOLE FOODS", "groceries"),
     ("WHOLEFDS", "groceries"),

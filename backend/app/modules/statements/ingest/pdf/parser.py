@@ -41,13 +41,15 @@ class PdfStatementParser:
     def parse(self, raw: bytes, options: ParseOptions) -> list[ParsedTransaction]:
         if not is_pdf(raw):
             raise InvalidStatementError("Not a valid PDF file")
-        rows = dedupe_rows(self._best_rows(raw, options))
+        rows = self._best_rows(raw, options)
         return parse_tabular_rows(rows, options, header_index=0, skip_invalid_rows=True)
 
     def _best_rows(self, raw: bytes, options: ParseOptions) -> list[list[str]]:
         """Pick the extraction strategy that yields the most valid transactions."""
         candidates: list[list[list[str]]] = []
 
+        # Line rows are already de-duplicated per bank profile (registry) — do not
+        # collapse them again here (PNC prints genuine repeated charges).
         pages = extract_page_texts(raw)
         line_rows = extract_line_rows(pages)
         if line_rows:
@@ -57,7 +59,7 @@ class PdfStatementParser:
         if table_rows:
             try:
                 locate_header_row(table_rows, options)
-                candidates.append(table_rows)
+                candidates.append(dedupe_rows(table_rows))
             except IngestError:
                 pass
 
@@ -73,7 +75,7 @@ class PdfStatementParser:
         for rows in candidates:
             try:
                 txs = parse_tabular_rows(
-                    dedupe_rows(rows),
+                    rows,
                     options,
                     header_index=0,
                     skip_invalid_rows=True,

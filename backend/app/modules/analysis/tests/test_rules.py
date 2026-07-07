@@ -136,6 +136,46 @@ def test_unstable_amount_is_not_recurring() -> None:
     assert result.subscriptions == []
 
 
+def test_categorize_transaction_types_bilingual() -> None:
+    # Structural/type cues classify even when the merchant is unknown (D20).
+    assert categorize("Zelle money sent to CLASSY BEAUTY SALON".upper()) == "transfer"
+    assert categorize("ZEL FROM GLORIA SANTANA") == "transfer"
+    assert categorize("Withdrawal to Fondo de Emergencia".upper()) == "transfer"
+    assert categorize("TRANSFERENCIA A AHORRO") == "transfer"
+    assert categorize("Withdrawal from CAPITAL ONE MOBILE PMT".upper()) == "transfer"
+    assert categorize("ATM Withdrawal - CVS STORE".upper()) == "cash"
+    assert categorize("RETIRO EN CAJERO") == "cash"
+    assert categorize("Monthly Interest Paid".upper()) == "income"
+    assert categorize("Deposit from Sueldo".upper()) == "income"
+    assert categorize("IClub Fees Debit".upper()) == "fees"
+    assert categorize("OVERDRAFT FEE") == "fees"
+
+
+def test_canonical_merchant_strips_structural_tokens() -> None:
+    # Transaction plumbing (from/to/zelle/card/debit + ES articles) must not end
+    # up in the canonical name or merge unrelated transfers (D20).
+    assert canonical_merchant("Withdrawal from CAPITAL ONE MOBILE PMT") == "CAPITAL ONE"
+    assert canonical_merchant("Zelle money sent to CLASSY BEAUTY SALON LLC") == "CLASSY BEAUTY SALON"
+    assert canonical_merchant("2785 Debit Card Purchase Ctlp*Mill Creek") == "CTLP MILL CREEK"
+    assert canonical_merchant("Withdrawal to Fondo de Emergencia XXXXXXX5449") == "FONDO EMERGENCIA"
+    # Distinct internal funds no longer collapse into one "TO FONDO DE" group.
+    assert canonical_merchant("Withdrawal to Fondo de Deseos") == "FONDO DESEOS"
+
+
+def test_google_one_single_occurrence_is_suspected_subscription() -> None:
+    # A real subscription (Google One storage) on a single statement (D17/D20).
+    transactions = [
+        Tx(date(2026, 6, 11), "Debit Card Purchase - GOOGLE ONE GOOGLE COM CA", Decimal("-1.99"))
+    ]
+    result = run_layer_one(transactions)
+    assert len(result.subscriptions) == 1
+    sub = result.subscriptions[0]
+    assert sub.merchant == "GOOGLE ONE"
+    assert sub.cadence == "suspected"
+    assert sub.category == "software"
+    assert result.estimated_savings == Decimal("1.99")
+
+
 def test_categories_align_with_input_order() -> None:
     transactions = [
         Tx(date(2026, 1, 3), "NETFLIX.COM", Decimal("-15.49")),

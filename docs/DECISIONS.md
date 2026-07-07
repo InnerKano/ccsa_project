@@ -272,3 +272,55 @@ ingest/
 **Validated against** (local only, git-ignored): Capital One Savor card, Discover It, Bank of America checking, Capital One 360 (correctly rejected). Real samples never committed (`real_samples/`, `*.pdf` in `.gitignore`).
 
 **API/frontend**: `POST /api/statements` and upload UI accept `.pdf`; advanced column mapping applies to both CSV and PDF.
+
+### D19 — Per-bank PDF row profiles (`pdf/profiles/`) + Capital One 360 & PNC support
+**Decision (dev branch)**: Realize the extension point D18 anticipated. The line-oriented PDF parser is refactored from a single `pdf/lines.py` scan into a **profile registry** (`pdf/profiles/`), and two new layouts are supported: **Capital One 360 checking/savings** and **PNC Virtual Wallet**. `api.py`, persistence, and the shared column mapper (`columns.py`) are unchanged.
+
+**Why these two failed before** (confirmed by running the parser, not by inspection):
+- **Capital One 360 checking** — transaction lines carry a *single* `Mon Day` date, a `Debit`/`Credit` marker, the amount, and a trailing **running-balance** column (`Jun 1 Withdrawal from … Debit - $127.00 $1,916.72`). None of the four D18 profiles matched: the card profile needs *two* dates; the generic "loose" profile grabbed the last `$` (the balance) and rejected the bare `Jun` date token. Table extraction shattered the columns. Some long descriptions wrap across lines.
+- **PNC Virtual Wallet** — columns are `Date, Amount, Description` (amount **before** description), amounts carry **no sign or `$`** (the sign is implied by the section: additions positive; withdrawals/purchases/electronic deductions negative), dates are `MM/DD` with the year only in the period banner, and a `Daily Balance Detail` table of `date balance` pairs must be excluded. No profile matched and there were no ruled tables.
+
+**Architecture**:
+```text
+ingest/pdf/
+├── extract.py          # unchanged: pdfplumber tables + page text
+├── lines.py            # thin orchestrator: infer year → registry → rows_to_table
+└── profiles/
+    ├── base.py             # RowProfile contract, LineRow, MONTH, rows_to_table
+    ├── generic.py          # existing Capital One card / BoA / Discover / loose scan
+    ├── capital_one_360.py  # NEW — single date + Debit/Credit + balance column
+    ├── pnc.py              # NEW — section-driven sign, date/amount/desc order
+    └── registry.py         # PNC, Capital One 360, then Generic (fallback)
+```
+A profile that recognizes a document but extracts nothing (e.g. a summary-only 360 statement) falls through to the next profile, preserving D18's "fail cleanly, never invent rows" guarantee.
+
+**Two correctness rules discovered on the real samples**:
+- **De-duplication is per-profile, not global.** The D18 exact-row dedupe existed to collapse Capital One card's bilingual (ES+EN) reprints. PNC legitimately prints the *same* small charge several times a day (e.g. four `$2.15` vending purchases), so global dedupe silently dropped real transactions. Dedupe is now a profile opt-in (`dedupe = True` only for the generic/card profile); PNC and 360 keep every row. Verified against PNC's own totals: 5 deposits = \$2,288.99, 19 card purchases = \$312.73, 3 electronic deductions = \$2,014.84 — all exact.
+- **PNC descriptions are not line-joined.** PNC's two-column layout interleaves left-column summary sentences (`"…Machine/Debit Card deductions…"`) between transaction rows, so attaching wrapped fragments is unreliable. Only the primary `MM/DD amount description` line is kept; trailing reference codes (`690387`, `Bevera`) are dropped. The primary description still names the merchant (NETFLIX, AMAZON, CTLP\*MILL CREEK…), which is all the analysis layer canonicalizes (D17).
+
+**Alternatives considered**:
+- Add two more functions inside `pdf/lines.py` → rejected: D18 already flagged `pdf/profiles/` as the seam "when a fourth layout appears"; we are at layouts #5–#6.
+- Keep global dedupe and special-case PNC → rejected: silently wrong on any statement with genuine repeats; per-profile opt-in is the honest fix.
+- Reconstruct wrapped PNC descriptions via column geometry → rejected: over-engineering (Risk #3) for no analytical gain; the merchant is already in the primary line.
+
+**Data-handling consequence**: the two new fixtures contain **real PII** (names, addresses, account numbers). They were moved out of `backend/fixtures/no support now/` into `backend/fixtures/real_samples/` (git-ignored via `*.pdf` + `real_samples/`, D15/D4, `AI_RULES.md` Red zone). Committed tests use **synthetic, PII-free** page text (`test_pdf_profiles.py`); real files are exercised only by `skipif` integration tests when present locally.
+
+**Validated** (local only, git-ignored): Capital One 360 *checking* (46 transactions, wrapped rows merged, Opening/Closing/Interest-Rate lines excluded) and PNC Virtual Wallet (27 transactions, totals match the statement exactly). The four D18 layouts and the summary-only 360 "fails cleanly" test are unchanged. Full suite: 97 tests green.
+
+### D20 — Transaction-type categorization (`transfer`/`cash`/`fees`) + canonical-merchant hardening
+**Decision (dev branch)**: The analysis layer (`analysis/rules/`) now categorizes by the **stable structural part** of a description — the transaction *type* — not only by known merchants. This is a data-only extension of the D9/D17 vocabulary plus a bug fix in `canonical_merchant`; the engine algorithm and DB schema are unchanged.
+
+**Why** (confirmed by running Layer 1 on the two real D19 statements, not by inspection):
+- On Capital One 360, **40/46** rows were `other`; on PNC, **21/27**. The vocabulary was **merchant-centric**, but these statements are dominated by rows that have *no merchant to identify*: Zelle/`Zel` transfers, internal fund/savings transfers (`Withdrawal to Fondo de Emergencia`), card/bill payments (`… MOBILE PMT`), ATM cash, interest paid, and bank fees (`IClub Fees`). Partly a **language** gap too (bilingual ES: `Deposit from Sueldo`, `Fondo de …`).
+- `canonical_merchant` kept transaction-structure words that are not part of a merchant name (`FROM`, `TO`, `ZELLE`, `CARD`, `DEBIT`, ES articles `DE`/`LA`…), producing garbage/merged canonical names like `TO FONDO DE` (which **collapsed distinct funds** — Emergencia/Deseos/Educacion — into one group and would corrupt future multi-month recurrence) and `DEBIT CARD CTLP`.
+
+**What changed** (all in `analysis/rules/vocabulary.py`, engine untouched):
+- New controlled categories `transfer`, `cash`, `fees` (income already existed) + bilingual `CATEGORY_KEYWORDS` rules for them, placed **before** merchant keywords so structural cues win (e.g. `ATM Withdrawal - CVS STORE` → `cash`, not `shopping`). Interest and `Sueldo` added to `income`.
+- Extended `MERCHANT_NOISE_TOKENS` with structural/ES-article tokens so canonical names group and label correctly.
+- Added `GOOGLE ONE` as a known subscription (a real recurring charge on the 360 that was being missed).
+
+**Principle**: *categorize without necessarily identifying the specific merchant.* Merchant-specific vocabulary (e.g. PNC's `Ctlp*Mill Creek` vending, `Affirm`) is intentionally left to grow later; those rows stay `other` rather than being guessed.
+
+**Honesty invariants kept (D16/D17)**: no new subscription heuristics — a single statement is still one month, so nothing is invented; the intra-month "repeated small charge" signal was **explicitly rejected** (a vending repeat is not a subscription). `GOOGLE ONE` is surfaced as `suspected`, not `monthly`. Savings stays discretionary-only, so `estimated_savings ≤ monthly_recurring_total` still holds.
+
+**Result** (local, git-ignored): 360 `other` 40 → 10, PNC `other` 21 → 16, both with clean canonical names and no over-detection. Added `test_rules.py` cases (bilingual type categorization, structural-token stripping, Google One suspected). Full suite: 100 tests green.

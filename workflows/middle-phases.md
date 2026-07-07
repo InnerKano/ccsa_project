@@ -25,8 +25,10 @@ Bootstrap (`start-project.md` Steps 1–5) is complete. This document orders the
 - [x] A2 — Statements (CSV upload + persistence) — **committed**
 - [x] A2.1 — Ingestion hardening (modular parser: formats/locales/encoding, EN+ES, US/EU, debit-credit) — **committed**
 - [~] A2.2 — PDF ingestion adapter (shared `columns.py`, pdfplumber + line profiles, `.pdf` upload) — **implemented on `dev`, see D18; pending your audit/commit**
+- [~] A2.3 — PDF row-profile registry (`pdf/profiles/`) + Capital One 360 & PNC layouts (per-profile dedupe, section-driven sign) — **implemented on `dev`, see D19; pending your audit/commit**
 - [x] A3 — Analysis L1 (rules: recurrence + categorization + savings + persistence) — **committed**
 - [~] A3.1 — Analyzer realism pass (dev): merchant-noise stripping, expanded EN+ES vocabulary, single-statement subscription signals, synthetic `caso4` fixture — **implemented on `dev`, see D17; pending your audit/commit**
+- [~] A3.2 — Transaction-type categorization (`transfer`/`cash`/`fees`, bilingual) + `canonical_merchant` structural-token fix; Google One known sub — **implemented on `dev`, see D20; pending your audit/commit**
 - [ ] A4 — Frontend vertical slice (login → upload → results dashboard) — **implemented, pending your audit of A4.6 docs / final Phase A sign-off**
   - [x] **A4.1** — Foundations + CORS (design system, API client, auth context, Compose npm sync) — **committed**
   - [x] **A4.2** — Auth screens on design system + protected routes + app shell — **committed**
