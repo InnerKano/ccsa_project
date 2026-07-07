@@ -26,9 +26,21 @@ export type Recommendation = {
   estimated_saving: string;
 };
 
+export type CategorySpendSlice = {
+  category: string;
+  amount: string;
+  percentage: string;
+};
+
+export type SpendingComparison = {
+  before: CategorySpendSlice[];
+  after: CategorySpendSlice[];
+};
+
 export type AnalysisDetail = AnalysisSummary & {
   detected_subscriptions: DetectedSubscription[];
   recommendations: Recommendation[];
+  spending_comparison?: SpendingComparison;
 };
 
 export function runAnalysis(statementId: string): Promise<AnalysisDetail> {

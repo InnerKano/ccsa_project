@@ -19,7 +19,9 @@ lib/
 │   ├── resolve.ts     # light / dark / system → resolved theme + DOM apply
 │   └── context.tsx    # ThemeProvider / useTheme
 ├── cn.ts              # className helper (clsx)
-└── format.ts          # formatCurrency / formatDate (Decimal strings from API)
+├── format.ts          # formatCurrency / formatDate (Decimal strings from API)
+└── analysis/
+    └── chartColors.ts # stable chart-1…8 mapping per category (spending comparison)
 ```
 
 ## Rules

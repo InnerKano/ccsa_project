@@ -20,9 +20,11 @@ components/
 ├── analysis/
 │   ├── AnalysisDetailView.tsx
 │   ├── AnalysisSummaryCards.tsx
+│   ├── SpendingComparisonCard.tsx
+│   ├── SpendingDonutPanel.tsx
 │   ├── SubscriptionList.tsx
 │   └── RecommendationList.tsx
-└── ui/                   # primitives (Button, Field, Card, ThemeToggle, …)
+└── ui/                   # primitives (Button, Field, Card, DonutChart, ThemeToggle, …)
 ```
 
 ## Rules

@@ -5,6 +5,7 @@ import useSWR from "swr";
 
 import { AnalysisSummaryCards } from "@/components/analysis/AnalysisSummaryCards";
 import { RecommendationList } from "@/components/analysis/RecommendationList";
+import { SpendingComparisonCard } from "@/components/analysis/SpendingComparisonCard";
 import { SubscriptionList } from "@/components/analysis/SubscriptionList";
 import { Alert, buttonClass, Spinner } from "@/components/ui";
 import { getAnalysis } from "@/lib/api/analysis";
@@ -71,6 +72,14 @@ export function AnalysisDetailView({ analysisId }: AnalysisDetailViewProps) {
         estimatedSavings={analysis.estimated_savings}
         currency={currency}
       />
+
+      {analysis.spending_comparison && (
+        <SpendingComparisonCard
+          comparison={analysis.spending_comparison}
+          estimatedSavings={analysis.estimated_savings}
+          currency={currency}
+        />
+      )}
 
       <SubscriptionList subscriptions={analysis.detected_subscriptions} currency={currency} />
 

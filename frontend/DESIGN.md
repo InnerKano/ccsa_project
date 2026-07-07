@@ -61,6 +61,8 @@ All visual constants live as **Tailwind v4 CSS-first tokens** in [`app/globals.c
 - Money: render amounts in `foreground`. Reserve `success`/`danger` for *directional* meaning (e.g. estimated savings positive, an overspend), not for every number.
 - Status colors require a non-color cue too (icon, label) — never rely on color alone (accessibility).
 
+**Chart palette (`chart-1` … `chart-8`).** Reserved for **data visualization** (spending-comparison donut segments). These are semantic data colors, not a second brand accent. Map categories to `var(--color-chart-N)` via `lib/analysis/chartColors.ts` so the same category keeps the same color in before/after panels. Dark-theme overrides live in `globals.css` → `[data-theme="dark"]`. Reserve `brand-*` for the savings callout only (`text-brand-700` on the “You'll save …” line).
+
 ### 2.1.1 Dark theme
 
 Dark mode is implemented via **`[data-theme="dark"]` on `<html>`** — semantic tokens in `globals.css` are overridden; components keep using the same Tailwind utilities (`bg-surface`, `text-foreground`, etc.).
@@ -97,7 +99,7 @@ Dark mode is implemented via **`[data-theme="dark"]` on `<html>`** — semantic 
 ### 2.4 Focus & motion
 
 - **Focus:** global `:focus-visible` ring (2px `brand-600`, 2px offset) on all interactive elements — do not remove it.
-- **Motion:** `transition-colors` on hover/focus state changes. Only spinners animate (`animate-spin`). No decorative motion.
+- **Motion:** `transition-colors` on hover/focus state changes. Only spinners animate (`animate-spin`) for general UI. **Exception:** data-visualization load-in (donut segment draw, center total count-up, savings note fade) is allowed on the analysis spending-comparison card — keep it subtle (600–900 ms), and **always respect `prefers-reduced-motion: reduce`** (show final state immediately).
 
 ---
 
@@ -137,6 +139,9 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 ### Spinner
 - Inline/standalone loading indicator; inherits `currentColor`. Used inside `Button` and for full-page auth/guard loading.
 
+### DonutChart
+- SVG donut for category spend breakdown. Props: `segments`, `total`, `currency`. Center shows formatted total + “TOTAL” label. Segment colors come from `var(--color-chart-N)` — never hard-coded hex. Animations respect `prefers-reduced-motion`. Used by `SpendingComparisonCard` on `/analysis/[id]`.
+
 **Adding a component:** it belongs in `components/ui/` if it is presentation-only and reused; in `components/<feature>/` if it carries feature context. It must consume tokens (no hex), expose `className` passthrough via `cn()`, forward refs when it wraps a native control, and be exported from the relevant barrel.
 
 ---
@@ -151,7 +156,7 @@ Import from the barrel: `import { Button, Field, Card, Alert, Spinner } from "@/
 | `/login`, `/register` | `AuthLayout` | forms with `Field` / `Button` / `Alert` |
 | `/dashboard` | `AppShell` + `RequireAuth` | `StatementList`, `StatementCard` |
 | `/upload` | `AppShell` + `RequireAuth` | `StatementUploadForm` |
-| `/analysis/[id]` | `AppShell` + `RequireAuth` | `AnalysisDetailView` → `SubscriptionList`, `RecommendationList` |
+| `/analysis/[id]` | `AppShell` + `RequireAuth` | `AnalysisDetailView` → `AnalysisSummaryCards`, `SpendingComparisonCard`, `SubscriptionList`, `RecommendationList` |
 
 ### Layout & guards
 

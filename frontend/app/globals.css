@@ -37,6 +37,16 @@
   --color-success: #059669;
   --color-success-bg: #ecfdf5;
 
+  /* Data-viz palette — category segments only (not a second brand accent). */
+  --color-chart-1: #059669;
+  --color-chart-2: #7c3aed;
+  --color-chart-3: #d97706;
+  --color-chart-4: #2563eb;
+  --color-chart-5: #db2777;
+  --color-chart-6: #0891b2;
+  --color-chart-7: #65a30d;
+  --color-chart-8: #64748b;
+
   --radius-card: 0.875rem;
 }
 
@@ -59,6 +69,15 @@ html {
 
   --color-danger-bg: #450a0a;
   --color-success-bg: #064e3b;
+
+  --color-chart-1: #34d399;
+  --color-chart-2: #a78bfa;
+  --color-chart-3: #fbbf24;
+  --color-chart-4: #60a5fa;
+  --color-chart-5: #f472b6;
+  --color-chart-6: #22d3ee;
+  --color-chart-7: #a3e635;
+  --color-chart-8: #94a3b8;
 
   color-scheme: dark;
 }
