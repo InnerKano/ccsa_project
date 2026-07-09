@@ -108,7 +108,7 @@ Dark mode is implemented via **`[data-theme="dark"]` on `<html>`** — semantic 
 ## 3. Layout & responsiveness
 
 - **Containers:** authenticated content is centered at `max-w-5xl`; auth screens at `max-w-md`; landing hero at `max-w-3xl` (centered, `text-center`). Description and trust note cap at `max-w-xl` (~576px). Horizontal page padding `px-4`.
-- **Header height:** `h-14` in `AppShell`, `py-4` brand bar in `AuthLayout` and landing. Public headers (`/`, login, register) share the same bar: `border-b border-border bg-surface px-4 py-4`, inner row `flex items-center justify-between gap-4` — **full viewport width**, not capped to the hero container.
+- **Header height:** `h-14` in `AppShell`, `py-4` brand bar in `AuthLayout` and landing. Public headers (`/`, login, register) share the same bar: `bg-background px-4 py-4`, inner row `flex items-center justify-between gap-4` — **full viewport width**, not capped to the hero container.
 - **Mobile-first:** default styles target small screens; layer `sm:`/`lg:` up. Everything must be usable at 360px wide. Landing hero scales `text-4xl → sm:text-5xl → lg:text-6xl`; vertical padding `py-20 sm:py-28` for generous whitespace.
 - **Full height:** page shells use `min-h-dvh` (dynamic viewport height — correct on mobile browsers).
 

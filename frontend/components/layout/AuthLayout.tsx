@@ -14,7 +14,7 @@ type AuthLayoutProps = {
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="border-b border-border bg-surface px-4 py-4">
+      <header className="bg-background px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-lg font-semibold text-brand-700 hover:text-brand-800">
             CCSA

@@ -35,7 +35,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="border-b border-border bg-surface">
+      <header className="bg-background px-4 py-4">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
           <Link href="/dashboard" className="shrink-0 text-lg font-semibold text-brand-700">
             CCSA
