@@ -62,7 +62,7 @@ Goal:
 
 - **Plaid / bank aggregator production integration:** out of scope; input is CSV.
 - **PDF parsing with OCR:** formats vary too much across banks for reliable implementation in the timeframe.
-- **Multi-currency / currency conversion.**
+- **Multi-currency / currency conversion.** Only USD is supported for now. Limitation implemented in the frontend. on 
 - **Mobile app / browser extension.**
 
 ### Known risks / assumptions

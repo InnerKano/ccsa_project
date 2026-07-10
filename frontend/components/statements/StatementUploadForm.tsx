@@ -21,7 +21,8 @@ const DECIMAL_STYLES: { value: DecimalStyle; label: string }[] = [
   { value: "eu", label: "EU / LatAm (1.234,56)" },
 ];
 
-const CURRENCIES = ["USD", "EUR", "COP", "MXN", "GBP"] as const;
+// const CURRENCIES = ["USD", "EUR", "COP", "MXN", "GBP"] as const;
+const CURRENCIES = ["USD"] as const; // only USD is supported for now
 
 /**
  * Statement upload form — POST /api/statements (CSV/TSV/TXT or PDF).
