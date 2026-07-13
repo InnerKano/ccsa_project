@@ -21,15 +21,18 @@ function formatCadenceLabel(cadence: string): string {
 
 type SubscriptionListProps = {
   subscriptions: DetectedSubscription[];
+  subscriptionsCount?: number;
   currency?: string;
 };
 
-export function SubscriptionList({ subscriptions, currency = "USD" }: SubscriptionListProps) {
+export function SubscriptionList({ subscriptions, subscriptionsCount, currency = "USD" }: SubscriptionListProps) {
   return (
     <Card>
       <CardContent>
         <CardTitle>Detected subscriptions</CardTitle>
         <p className="mt-1 text-sm text-muted">
+        {subscriptionsCount ? `${subscriptionsCount} detected` : `${subscriptions.length} detected`}
+        {" · "}
           Recurring charges with stable amounts across multiple months.
         </p>
 

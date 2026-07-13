@@ -74,6 +74,7 @@ class AnalysisResponse(BaseModel):
     recommendations: list[RecommendationResponse]
     created_at: datetime
     spending_comparison: SpendingComparisonResponse | None = None
+    subscriptions_count: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -108,6 +109,15 @@ class AnalysisResponse(BaseModel):
         return self.model_copy(
             update={"spending_comparison": SpendingComparisonResponse.from_comparison(comparison)}
         )
+
+    @model_validator(mode="after")
+    def derive_subscriptions_count(self) -> Self:
+        count = len(self.detected_subscriptions)
+        if self.subscriptions_count != count:
+            self = self.model_copy(
+                update={"subscriptions_count": count}
+            )
+        return self
 
 
 class AnalysisSummaryResponse(BaseModel):

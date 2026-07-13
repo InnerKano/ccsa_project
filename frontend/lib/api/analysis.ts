@@ -47,6 +47,7 @@ export type AnalysisDetail = AnalysisSummary & {
   // Savings split (D21): estimated_savings === avoidable_fees_total + potential_subscription_savings.
   avoidable_fees_total: string;
   potential_subscription_savings: string;
+  subscriptions_count: number;
   detected_subscriptions: DetectedSubscription[];
   recommendations: Recommendation[];
   spending_comparison?: SpendingComparison;

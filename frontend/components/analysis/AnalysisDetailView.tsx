@@ -83,7 +83,7 @@ export function AnalysisDetailView({ analysisId }: AnalysisDetailViewProps) {
         />
       )}
 
-      <SubscriptionList subscriptions={analysis.detected_subscriptions} currency={currency} />
+      <SubscriptionList subscriptions={analysis.detected_subscriptions} subscriptionsCount={analysis.subscriptions_count} currency={currency} />
 
       <RecommendationList recommendations={analysis.recommendations} currency={currency} />
 

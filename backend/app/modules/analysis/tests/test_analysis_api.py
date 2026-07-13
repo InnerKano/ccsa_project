@@ -24,6 +24,10 @@ def test_analyze_statement_detects_subscriptions(
     merchants = {s["merchant"] for s in body["detected_subscriptions"]}
     assert merchants == {"NETFLIX", "SPOTIFY", "AMAZON PRIME"}
 
+    # Test the subscriptions_count
+    assert body["subscriptions_count"] == 3
+    assert body["subscriptions_count"] == len(body["detected_subscriptions"])
+
     # 2 discretionary cancels + 1 essential review (AMAZON PRIME) + 2 fee types.
     kinds = sorted(r["kind"] for r in body["recommendations"])
     assert kinds == [
@@ -65,6 +69,9 @@ def test_analysis_is_persisted_and_retrievable(
     items = listing.json()
     assert any(item["id"] == analysis_id for item in items)
     assert "detected_subscriptions" not in items[0]  # summary view only
+
+    # Assert the subscriptions_count
+    assert detail.json()["subscriptions_count"] == 3
 
 
 def test_reanalysis_appends_new_row(
