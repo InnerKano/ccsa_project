@@ -17,3 +17,5 @@
 - Re-analysis appends a new `Analysis` (D10); "current" = latest by `created_at`.
 - Running analysis fills `transactions.category` (latest run wins).
 - Every query is scoped by `user_id`; a non-owner gets `404` (never `403`).
+
+

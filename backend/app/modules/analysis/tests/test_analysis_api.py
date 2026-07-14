@@ -127,3 +127,45 @@ def test_other_user_cannot_analyze_or_read(
 def test_analysis_requires_auth(client: TestClient, statement_id: str) -> None:
     assert client.post(f"/api/analysis/{statement_id}").status_code == 401
     assert client.get("/api/analysis").status_code == 401
+
+def test_export_analysis_csv(
+    client: TestClient, auth_headers: dict[str, str], statement_id: str
+) -> None:
+    """Test the export of an analysis as a CSV file."""
+    created = client.post(f"/api/analysis/{statement_id}", headers=auth_headers)
+    analysis_id = created.json()["id"]
+    
+    response = client.get(f"/api/analysis/{analysis_id}/export.csv", headers=auth_headers)
+
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "text/csv; charset=utf-8"
+    assert response.headers["Content-Disposition"] == f'attachment; filename="analysis-{analysis_id}.csv"'
+
+    text = response.text
+    
+    assert "monthly_recurring_total" in text
+    assert "subscription" in text
+    assert "recommendation" in text
+
+def test_export_missing_or_foreign_returns_404(
+    client: TestClient, auth_headers: dict[str, str], statement_id: str, other_user_headers: dict[str, str]
+) -> None:
+    """Test the export of a missing or foreign analysis returns a 404."""
+    missing = "00000000-0000-0000-0000-000000000000"
+    assert (
+        client.get(f"/api/analysis/{missing}/export.csv", headers=auth_headers).status_code 
+        == 404
+    )
+
+    created = client.post(f"/api/analysis/{statement_id}", headers=auth_headers)
+    analysis_id = created.json()["id"]
+    forbidden = client.get(
+        f"/api/analysis/{analysis_id}/export.csv", headers=other_user_headers
+    )
+    assert forbidden.status_code == 404
+    assert forbidden.json()["detail"] == "Analysis not found or not authorized"
+
+def text_export_requires_auth(client: TestClient, statement_id: str) -> None:
+    """Test the export of an analysis requires authentication."""
+    missing = "00000000-0000-0000-0000-000000000000" # missing analysis ID
+    assert client.get(f"/api/analysis/{missing}/export.csv").status_code == 401

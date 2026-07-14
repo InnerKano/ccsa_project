@@ -11,6 +11,7 @@ lib/
 │   ├── auth.ts        # register / login / forgot-password / reset-password
 │   ├── statements.ts  # upload, list, get
 │   └── analysis.ts    # run + list + get
+│   └── exportAnalysisCsv.ts # export analysis as CSV
 ├── auth/
 │   ├── session.ts        # token read/write (localStorage — single persistence seam)
 │   ├── passwordPolicy.ts # NIST strength rules (D24) — mirror of backend password_policy.py

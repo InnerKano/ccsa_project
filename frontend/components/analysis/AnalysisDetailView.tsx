@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 
@@ -7,7 +8,8 @@ import { AnalysisSummaryCards } from "@/components/analysis/AnalysisSummaryCards
 import { RecommendationList } from "@/components/analysis/RecommendationList";
 import { SpendingComparisonCard } from "@/components/analysis/SpendingComparisonCard";
 import { SubscriptionList } from "@/components/analysis/SubscriptionList";
-import { Alert, buttonClass, Spinner } from "@/components/ui";
+import { Alert, Button, buttonClass, Spinner } from "@/components/ui";
+import { exportAnalysisCsv } from "@/lib/api/exportAnalysisCsv";
 import { getAnalysis } from "@/lib/api/analysis";
 import { getStatement } from "@/lib/api/statements";
 import { formatDate } from "@/lib/format";
@@ -30,6 +32,21 @@ export function AnalysisDetailView({ analysisId }: AnalysisDetailViewProps) {
   );
 
   const currency = statement?.currency ?? "USD";
+
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  async function handleExport() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      await exportAnalysisCsv(analysisId);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Failed to export analysis");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   if (analysisLoading) {
     return (
@@ -87,9 +104,24 @@ export function AnalysisDetailView({ analysisId }: AnalysisDetailViewProps) {
 
       <RecommendationList recommendations={analysis.recommendations} currency={currency} />
 
-      <Link href="/dashboard" className={buttonClass("secondary")}>
-        Back to dashboard
-      </Link>
+      {exportError && <Alert variant="error">{exportError}</Alert>}
+
+    {/* Download analysis button and back to dashboard */}
+    <div className="flex flex-wrap gap-2 justify-end ">
+        <Button 
+          type="button"
+          variant="secondary" 
+          loading={exporting}
+          onClick={handleExport} 
+          disabled={exporting}
+          >
+          Download analysis
+        </Button>
+        <Link href="/dashboard" className={buttonClass("secondary")}>
+          Back to dashboard
+        </Link>
+      </div>
+      
     </div>
   );
 }

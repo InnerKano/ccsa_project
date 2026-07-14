@@ -21,6 +21,7 @@ from app.modules.analysis.rules.engine import RulesResult, run_layer_one
 from app.modules.auth.models import User
 from app.modules.statements.models import Statement
 from app.modules.statements.services import get_statement_for_user
+from app.modules.analysis.features.csv_export import build_analysis_csv
 
 
 def run_analysis_for_statement(
@@ -106,3 +107,17 @@ def get_analysis_for_user(db: Session, analysis_id: UUID, user_id: UUID) -> Anal
         )
         .first()
     )
+
+def build_export_csv_for_user(db: Session, analysis_id: UUID, user_id: UUID) -> str:
+    """Build a CSV file from an analysis.
+    Args:
+        db: The database session.
+        analysis_id: The ID of the analysis.
+        user_id: The ID of the user.
+    Returns:
+        A string with the CSV file.
+    """
+    analysis = get_analysis_for_user(db, analysis_id, user_id)
+    if analysis is None:
+        return None
+    return build_analysis_csv(analysis)

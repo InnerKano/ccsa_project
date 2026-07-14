@@ -26,6 +26,7 @@ components/
 │   ├── SpendingDonutPanel.tsx
 │   ├── SubscriptionList.tsx
 │   └── RecommendationList.tsx
+│   └── ExportAnalysisCsvButton.tsx
 └── ui/                   # primitives (Button, Field, Card, DonutChart, InitialAvatar, ThemeToggle, …)
 ```
 

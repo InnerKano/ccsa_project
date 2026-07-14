@@ -253,6 +253,12 @@ Retrieves a saved analysis with full detail.
 
 **Response**: `200 OK` → full analysis (same shape as POST). Includes `spending_comparison` (not present on list summaries). `404` if it does not exist or does not belong to the user.
 
+#### GET /api/analysis/{analysis_id}/export.csv
+Downloads a saved analysis as CSV (`text/csv`). Includes summary totals, detected subscriptions, and recommendations. Built in memory; the file is not persisted. Reuses the same ownership rules as `GET /api/analysis/{id}` (including hiding analyses of archived statements — D22).
+
+**Response**: `200 OK` with `Content-Type: text/csv` and `Content-Disposition: attachment; filename="analysis-{id}.csv"`.
+
+**Errors**: `404` `{"detail": "Analysis not found"}` if missing or not owned. `401` if unauthenticated.
 ---
 
 ## Interactive documentation

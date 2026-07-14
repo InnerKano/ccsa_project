@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -12,6 +13,7 @@ from app.modules.analysis.schemas import (
     AnalysisSummaryResponse,
 )
 from app.modules.analysis.services import (
+    build_export_csv_for_user,
     get_analysis_for_user,
     list_analyses_for_user,
     run_analysis_for_statement,
@@ -58,3 +60,24 @@ def get_analysis(
             status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found"
         )
     return AnalysisResponse.model_validate(analysis)
+
+@router.get("/{analysis_id}/export.csv")
+def export_analysis_csv(
+    analysis_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Response:
+    csv_text = build_export_csv_for_user(db, analysis_id, user.id)
+    if csv_text is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Analysis not found or not authorized"
+        )
+    return Response(
+        content=csv_text, 
+        media_type="text/csv", 
+        headers={
+            "Content-Disposition": 
+                f'attachment; filename="analysis-{analysis_id}.csv"'
+        }
+    )
