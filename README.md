@@ -7,7 +7,8 @@ Project for the 72-hour challenge. The goal is a focused prototype that demonstr
 ## What it does
 
 1. Users register and log in.
-2. They upload a statement in **CSV** (the raw file is not stored; only the derived transactions are saved).
+2. They upload a statement in **CSV** or **PDF** (the raw file is not stored; only the derived transactions are saved). 
+  Example of a Bank of America PDF statement: [GOV 10a - MM BOA Acct 9041 Bank Statements - Jan-2019-Apr-2021 & Checks_Redacted.pdf](https://www.mdd.uscourts.gov/sites/mdd/files/GOV%2010a%20-%20MM%20BOA%20Acct%209041%20Bank%20Statements%20-Jan-2019-Apr-2021%20%26%20Checks_Redacted.pdf)
 3. The system analyzes the data in **two layers**:
    - **Layer 1 (rules, no AI):** normalizes transactions, detects recurring merchants/subscriptions **and avoidable bank/card fees (commissions)**, and computes estimated savings split into potential (cancel discretionary subscriptions) and hard (fees already paid) savings.
    - **Layer 2 (LLM, optional):** provides finer categorization and natural-language recommendations. If it fails or is disabled, the product gracefully falls back to Layer 1.
